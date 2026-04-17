@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LocationProvider } from './context/LocationContext'
 import { TimerProvider } from './context/TimerContext'
+import { ToastProvider } from './context/ToastContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppShell } from './components/layout/AppShell'
 import SignIn from './pages/SignIn'
@@ -18,6 +19,7 @@ function App() {
       <AuthProvider>
         <LocationProvider>
           <TimerProvider>
+            <ToastProvider>
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
@@ -37,6 +39,7 @@ function App() {
               </Route>
               <Route path="*" element={<Navigate to="/today" replace />} />
             </Routes>
+            </ToastProvider>
           </TimerProvider>
         </LocationProvider>
       </AuthProvider>

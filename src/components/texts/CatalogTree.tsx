@@ -7,6 +7,7 @@ import {
   useToggleRefsBulk,
 } from '../../hooks/useCompletions'
 import { Checkbox, type CheckState } from './Checkbox'
+import { MarkRangeModal } from './MarkRangeModal'
 
 /**
  * Browse tree built entirely from the pre-compiled catalog.json.
@@ -22,7 +23,7 @@ export function CatalogTree() {
   )
 }
 
-function CatalogNodeRow({ node, depth }: { node: CatalogNode; depth: number }) {
+export function CatalogNodeRow({ node, depth }: { node: CatalogNode; depth: number }) {
   if (node.ref) return <LeafRow node={node} depth={depth} />
   return <GroupRow node={node} depth={depth} />
 }
@@ -43,6 +44,7 @@ function stateFromCounts(completed: number, total: number): CheckState {
 // ---------------------------------------------------------------------------
 function GroupRow({ node, depth }: { node: CatalogNode; depth: number }) {
   const [open, setOpen] = useState(false)
+  const [rangeModalOpen, setRangeModalOpen] = useState(false)
   const completedRefs = useCompletedRefSet()
   const toggleBulk = useToggleRefsBulk()
 
@@ -67,7 +69,7 @@ function GroupRow({ node, depth }: { node: CatalogNode; depth: number }) {
   return (
     <div>
       <div
-        className="flex items-center gap-2 rounded hover:bg-kula-50 dark:hover:bg-kula-900/50"
+        className="group flex items-center gap-2 rounded hover:bg-kula-50 dark:hover:bg-kula-900/50"
         style={{ paddingLeft: `${depth * 0.75 + 0.5}rem` }}
       >
         <Checkbox
@@ -98,7 +100,20 @@ function GroupRow({ node, depth }: { node: CatalogNode; depth: number }) {
             </span>
           )}
         </button>
+
+        {/* Mark range button — visible on hover, only when the group has leaves */}
+        {total > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setRangeModalOpen(true) }}
+            title="Mark range as learned"
+            className="mr-1 hidden shrink-0 rounded-lg px-2 py-1 text-xs text-kula-400 transition-colors hover:bg-kula-100 hover:text-kula-700 group-hover:block dark:text-kula-600 dark:hover:bg-kula-800/40 dark:hover:text-kula-300"
+          >
+            Range…
+          </button>
+        )}
       </div>
+
       {open && (
         <div className="flex flex-col">
           {(node.children ?? []).map((child, i) => (
@@ -110,6 +125,10 @@ function GroupRow({ node, depth }: { node: CatalogNode; depth: number }) {
           ))}
         </div>
       )}
+
+      {rangeModalOpen && (
+        <MarkRangeModal groupNode={node} onClose={() => setRangeModalOpen(false)} />
+      )}
     </div>
   )
 }
@@ -117,7 +136,16 @@ function GroupRow({ node, depth }: { node: CatalogNode; depth: number }) {
 // ---------------------------------------------------------------------------
 // LeafRow
 // ---------------------------------------------------------------------------
-function LeafRow({ node, depth }: { node: CatalogNode; depth: number }) {
+export function LeafRow({
+  node,
+  depth,
+  customSefariaUrl,
+}: {
+  node: CatalogNode
+  depth: number
+  /** Override the Sefaria link. Pass null to hide the link entirely. */
+  customSefariaUrl?: string | null
+}) {
   const ref = node.ref!
   const completedRefs = useCompletedRefSet()
   const toggle = useToggleCompletion()
@@ -127,6 +155,11 @@ function LeafRow({ node, depth }: { node: CatalogNode; depth: number }) {
   const handleToggle = () => {
     toggle.mutate({ ref, currentlyChecked: isChecked })
   }
+
+  const href =
+    customSefariaUrl === null
+      ? null
+      : customSefariaUrl ?? sefariaUrl(ref)
 
   return (
     <div
@@ -149,16 +182,18 @@ function LeafRow({ node, depth }: { node: CatalogNode; depth: number }) {
       >
         {node.english}
       </button>
-      <a
-        href={sefariaUrl(ref)}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="hidden shrink-0 rounded px-1.5 py-0.5 text-xs text-kula-400 hover:bg-kula-100 hover:text-kula-600 group-hover:block dark:text-kula-600 dark:hover:bg-kula-800/40 dark:hover:text-kula-300"
-        title="Open in Sefaria"
-      >
-        ↗
-      </a>
+      {href && (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="hidden shrink-0 rounded px-1.5 py-0.5 text-xs text-kula-400 hover:bg-kula-100 hover:text-kula-600 group-hover:block dark:text-kula-600 dark:hover:bg-kula-800/40 dark:hover:text-kula-300"
+          title="Open in Sefaria"
+        >
+          ↗
+        </a>
+      )}
     </div>
   )
 }

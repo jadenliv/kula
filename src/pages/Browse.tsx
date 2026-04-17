@@ -1,4 +1,5 @@
 import { CatalogTree } from '../components/texts/CatalogTree'
+import { CustomSeferSection } from '../components/texts/CustomSeferSection'
 
 export default function Browse() {
   return (
@@ -8,12 +9,13 @@ export default function Browse() {
           Browse
         </h2>
         <p className="mt-1 text-sm text-kula-500 dark:text-kula-400">
-          Check off sections as you learn them. Tap any title to open it in Sefaria.
+          Check off sections as you learn them. Hover a title and click Range… to mark many at once.
         </p>
       </div>
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 md:p-4">
         <CatalogTree />
       </div>
+      <CustomSeferSection />
     </div>
   )
 }
