@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
+import { BottomNav } from './BottomNav'
 
 const THEME_KEY = 'kula-theme'
 
@@ -33,10 +34,13 @@ export function AppShell() {
       />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-6">
+        {/* pb-20 on mobile reserves space above the bottom nav */}
+        <main className="flex-1 px-4 py-5 pb-24 md:px-6 md:py-6 md:pb-6">
           <Outlet />
         </main>
       </div>
+      {/* Mobile-only bottom navigation */}
+      <BottomNav />
     </div>
   )
 }

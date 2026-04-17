@@ -79,7 +79,7 @@ function GroupRow({ node, depth }: { node: CatalogNode; depth: number }) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex flex-1 items-center gap-2 py-1.5 text-left text-sm"
+          className="flex flex-1 items-center gap-2 py-2 text-left text-sm md:py-1.5"
         >
           <span className="w-3 shrink-0 text-kula-400 dark:text-kula-600">
             {open ? '▾' : '▸'}
@@ -141,7 +141,7 @@ function LeafRow({ node, depth }: { node: CatalogNode; depth: number }) {
       <button
         type="button"
         onClick={() => navigate(`/read/${encodeURIComponent(ref)}`)}
-        className={`flex-1 rounded px-1 py-1 text-left ${
+        className={`flex-1 rounded px-1 py-2 text-left md:py-1 ${
           isChecked
             ? 'text-kula-400 line-through dark:text-kula-600'
             : 'text-kula-600 hover:text-kula-900 dark:text-kula-400 dark:hover:text-kula-100'

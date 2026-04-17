@@ -2,15 +2,16 @@ import { CatalogTree } from '../components/texts/CatalogTree'
 
 export default function Browse() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-5 md:space-y-6">
       <div>
-        <h2 className="font-serif text-3xl tracking-tight">Browse</h2>
-        <p className="mt-1 text-sm text-neutral-400">
-          Check off sections as you learn them. Click any title to open it in
-          Sefaria.
+        <h2 className="font-serif text-2xl tracking-tight text-kula-900 dark:text-kula-50 md:text-3xl">
+          Browse
+        </h2>
+        <p className="mt-1 text-sm text-kula-500 dark:text-kula-400">
+          Check off sections as you learn them. Tap any title to open it in Sefaria.
         </p>
       </div>
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 md:p-4">
         <CatalogTree />
       </div>
     </div>

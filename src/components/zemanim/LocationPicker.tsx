@@ -36,7 +36,7 @@ export function LocationPicker({ onClose }: Props) {
   }
 
   return (
-    <div className="w-72 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl">
+    <div className="w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-kula-900 dark:text-kula-100">Location</h3>
         <button

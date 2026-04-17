@@ -28,7 +28,11 @@
       "Bash(curl -s \"https://www.hebcal.com/hebcal?v=1&cfg=json&year=now&month=now&i=off\")",
       "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(list\\(data.keys\\(\\)\\)\\)\")",
       "Bash(curl -s \"https://www.sefaria.org/api/calendars\")",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(gh --version)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
