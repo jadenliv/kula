@@ -362,6 +362,14 @@ function SeferPicker({
           />
         </div>
 
+        {/* Error banner */}
+        {addSefer.isError && (
+          <div className="border-b border-red-200/40 bg-red-500/10 px-4 py-2.5 text-xs text-red-400 dark:text-red-300">
+            Failed to add sefer:{' '}
+            {addSefer.error instanceof Error ? addSefer.error.message : 'Unknown error'}
+          </div>
+        )}
+
         {/* Content */}
         <div className="overflow-y-auto">
           {query.trim() ? (
