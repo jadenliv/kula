@@ -21,6 +21,8 @@ import EditPost from './pages/posts/EditPost'
 import FollowersList, { FollowingList } from './pages/profile/FollowersList'
 import FollowRequests from './pages/settings/FollowRequests'
 import AdminReports from './pages/admin/Reports'
+import Feed from './pages/Feed'
+import Discover from './pages/Discover'
 import { POSTS_ENABLED } from './lib/featureFlags'
 
 function App() {
@@ -46,6 +48,10 @@ function App() {
                     <Route path="/browse" element={<Browse />} />
                     <Route path="/read/:ref" element={<Reader />} />
                     <Route path="/notebook" element={<Notebook />} />
+
+                    {/* Social */}
+                    <Route path="/feed" element={<Feed />} />
+                    <Route path="/discover" element={<Discover />} />
 
                     {/* Profile pages */}
                     <Route path="/u/:username" element={<Profile />} />

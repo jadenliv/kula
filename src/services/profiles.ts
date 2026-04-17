@@ -85,6 +85,17 @@ export async function isUsernameAvailable(
   return data === null
 }
 
+/** Public profiles ordered by most recently joined — used for the Discover page. */
+export async function listPublicProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as Profile[]
+}
+
 /** Update the current user's profile. */
 export async function updateProfile(updates: ProfileUpdate): Promise<Profile> {
   const { data: { user } } = await supabase.auth.getUser()

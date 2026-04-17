@@ -3,6 +3,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { useNotificationSubscription } from '../../hooks/useNotifications'
 import { POSTS_ENABLED } from '../../lib/featureFlags'
 
 const THEME_KEY = 'kula-theme'
@@ -16,6 +17,8 @@ function getInitialDark(): boolean {
 
 export function AppShell() {
   const [isDark, setIsDark] = useState<boolean>(getInitialDark)
+  // Activate Supabase Realtime subscription so the notification bell updates live.
+  useNotificationSubscription()
 
   useEffect(() => {
     const root = document.documentElement

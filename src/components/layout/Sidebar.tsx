@@ -15,6 +15,26 @@ const navItems = [
     ),
   },
   {
+    to: '/feed',
+    label: 'Feed',
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M10 6v4l2.5 2.5" />
+      </svg>
+    ),
+  },
+  {
+    to: '/discover',
+    label: 'Discover',
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M13 7l-2 4-4 2 2-4 4-2z" />
+      </svg>
+    ),
+  },
+  {
     to: '/dashboard',
     label: 'Dashboard',
     icon: (active: boolean) => (

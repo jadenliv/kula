@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ZemanimBar } from '../zemanim/ZemanimBar'
 import { UserMenu } from './UserMenu'
+import { NotificationBell } from './NotificationBell'
 import { POSTS_ENABLED } from '../../lib/featureFlags'
 
 type Props = {
@@ -43,6 +44,7 @@ export function Header({ onToggleTheme, isDark }: Props) {
         >
           {isDark ? '☀' : '☾'}
         </button>
+        {user && <NotificationBell />}
         {user && POSTS_ENABLED && (
           <Link
             to="/posts/new"

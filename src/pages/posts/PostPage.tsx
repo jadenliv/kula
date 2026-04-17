@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { MarkdownBody } from '../../components/posts/MarkdownBody'
 import { PostPrivacyIcon } from '../../components/posts/PostCard'
 import { POST_PRIVACY_LABELS } from '../../components/posts/PostPrivacySelector'
+import { ReportButton } from '../../components/profile/ReportButton'
 import { Spinner } from '../../components/ui/Spinner'
 
 function formatDate(iso: string): string {
@@ -109,6 +110,12 @@ export default function PostPage() {
             <PostPrivacyIcon privacy={post.privacy} />
             {POST_PRIVACY_LABELS[post.privacy]}
           </span>
+          {!isAuthor && (
+            <>
+              <span>·</span>
+              <ReportButton targetType="post" targetId={post.id} />
+            </>
+          )}
           {isAuthor && (
             <>
               <span>·</span>
