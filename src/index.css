@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+/* Inter: modern UI sans-serif                                                 */
+/* DM Serif Display: elegant display serif for Latin headings                 */
+/* Heebo: clean modern sans-serif designed for Hebrew, great glyph coverage   */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&family=DM+Serif+Display:ital@0;1&family=Heebo:wght@300;400;500;600;700&display=swap');
+
+/* ── Brand palette — deep navy → sky blue (from logo gradient) ───────────── */
+@theme {
+  --color-kula-50:  #e8f4fb;
+  --color-kula-100: #c5e3f2;
+  --color-kula-200: #9ecfe8;
+  --color-kula-300: #6bb8d4;
+  --color-kula-400: #4a9fd4;
+  --color-kula-500: #3d85c0;
+  --color-kula-600: #2d6fa8;
+  --color-kula-700: #1d3461;
+  --color-kula-800: #152750;
+  --color-kula-900: #0f1e3a;
+  --color-kula-950: #0a1525;
+
+  /* Sans: Inter for all UI text */
+  --font-sans:   'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Serif: DM Serif Display for Latin display headings, Heebo catches Hebrew glyphs */
+  --font-serif:  'DM Serif Display', 'Heebo', ui-sans-serif, system-ui, sans-serif;
+  /* Hebrew: Heebo — modern, clean, purpose-built for Hebrew */
+  --font-hebrew: 'Heebo', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Semantic surface tokens — flip on .dark ──────────────────────────────── */
+:root {
+  --app-bg:          #f4f7fc;
+  --surface:         #ffffff;
+  --surface-raised:  #edf2fb;
+  --surface-overlay: #e2ecf8;
+  --border:          #ccd6ee;
+  --border-subtle:   #e4eaf8;
+}
+
+.dark {
+  --app-bg:          #0a1525;
+  --surface:         #0f1e32;
+  --surface-raised:  #142438;
+  --surface-overlay: #1a2d45;
+  --border:          #1c3050;
+  --border-subtle:   #122030;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--app-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hebrew text uses Heebo — modern, no Times New Roman fallback */
+[lang="he"], [dir="rtl"] {
+  font-family: 'Heebo', ui-sans-serif, system-ui, sans-serif;
+}

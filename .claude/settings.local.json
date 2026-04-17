@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm ls:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx tsc:*)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(npm run:*)",
+      "Bash(lsof -i :5173 -sTCP:LISTEN)",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Genesis')",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Berakhot')",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Mishnah%20Berakhot')",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Mishneh%20Torah')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(type\\(d\\), len\\(d\\) if isinstance\\(d,list\\) else ''\\); print\\(json.dumps\\(d[0] if isinstance\\(d,list\\) else d, indent=2\\)[:800]\\)\")",
+      "Bash(curl -s 'https://www.sefaria.org/api/index/Mishneh%20Torah%2C%20Repentance')",
+      "Bash(python3 -c ':*)",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Mishneh%20Torah%2C%20Repentance')",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Shulchan%20Arukh%2C%20Orach%20Chayim')",
+      "Bash(curl -s 'https://www.sefaria.org/api/shape/Jerusalem%20Talmud%20Berakhot')",
+      "Bash(curl -s 'https://www.sefaria.org/api/index/Jerusalem%20Talmud%20Berakhot')",
+      "Bash(node scripts/build-catalog.mjs)",
+      "Bash(curl -s 'https://www.sefaria.org/api/index/')",
+      "Bash(node -e ':*)",
+      "Bash(npx vite:*)",
+      "Bash(xargs kill:*)",
+      "Bash(npm --prefix /Users/jadenlivian/Desktop/Kula run dev -- --host)",
+      "Bash(curl -s \"https://www.hebcal.com/hebcal?v=1&cfg=json&year=now&month=now&i=off\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(list\\(data.keys\\(\\)\\)\\)\")",
+      "Bash(curl -s \"https://www.sefaria.org/api/calendars\")",
+      "Bash(xargs cat:*)"
+    ]
+  }
+}
