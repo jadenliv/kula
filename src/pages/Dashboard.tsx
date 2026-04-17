@@ -146,7 +146,6 @@ function PickerTreeRow({
   onAdd: AddHandler
   pending: boolean
 }) {
-  // Top-level nodes start collapsed; everything else starts collapsed too.
   const [expanded, setExpanded] = useState(false)
   const hasChildren = node.children.length > 0
   const alreadyAdded = existingIds.has(node.english)
@@ -154,16 +153,16 @@ function PickerTreeRow({
   return (
     <div>
       <div
-        className="flex items-center transition-colors hover:bg-[var(--surface-raised)]"
+        className="group flex items-center gap-1 pr-2 transition-colors hover:bg-[var(--surface-raised)]"
         style={{ paddingLeft: `${depth * 1.25 + 0.75}rem` }}
       >
-        {/* Expand / collapse chevron */}
+        {/* Expand / collapse chevron — only shown when there are children */}
         {hasChildren ? (
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-label={expanded ? 'Collapse' : 'Expand'}
-            className="mr-1.5 flex h-6 w-5 shrink-0 items-center justify-center rounded text-kula-400 hover:text-kula-700 dark:hover:text-kula-200"
+            className="flex h-8 w-6 shrink-0 items-center justify-center rounded text-kula-400 hover:text-kula-700 dark:hover:text-kula-200"
           >
             <svg
               viewBox="0 0 16 16"
@@ -178,30 +177,48 @@ function PickerTreeRow({
             </svg>
           </button>
         ) : (
-          // Spacer so leaf-level items line up
-          <span className="mr-1.5 w-5 shrink-0" />
+          <span className="w-6 shrink-0" />
         )}
 
-        {/* Selectable row — clicking adds this sefer */}
-        <button
-          type="button"
-          disabled={alreadyAdded || pending}
-          onClick={() => onAdd(node)}
-          className="flex flex-1 items-center justify-between py-2.5 pr-4 text-left disabled:cursor-default"
+        {/* Name — clicking expands if there are children */}
+        <div
+          className={`flex min-w-0 flex-1 py-2.5 ${hasChildren ? 'cursor-pointer' : ''}`}
+          onClick={hasChildren ? () => setExpanded((v) => !v) : undefined}
         >
           <span className="min-w-0">
             <span className={`block text-sm ${alreadyAdded ? 'text-kula-400 dark:text-kula-600' : 'font-medium text-kula-800 dark:text-kula-200'}`}>
               {node.english}
             </span>
             {node.hebrew && (
-              <span className="block text-xs text-kula-400 dark:text-kula-600" dir="rtl">
+              <span className="block text-xs text-kula-400 dark:text-kula-500" dir="rtl">
                 {node.hebrew}
               </span>
             )}
           </span>
-          <span className="ml-3 shrink-0 text-xs text-kula-400 dark:text-kula-600">
-            {alreadyAdded ? 'Added' : node.totalRefs.toLocaleString()}
-          </span>
+        </div>
+
+        {/* Add button — explicit "+" or checkmark */}
+        <button
+          type="button"
+          disabled={alreadyAdded || pending}
+          onClick={() => onAdd(node)}
+          aria-label={alreadyAdded ? 'Already added' : `Add ${node.english}`}
+          className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-default"
+          style={alreadyAdded
+            ? { color: 'var(--color-kula-400)' }
+            : undefined}
+        >
+          {alreadyAdded ? (
+            // Checkmark
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-kula-400 dark:text-kula-600" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 8l4 4 6-7" />
+            </svg>
+          ) : (
+            // Plus
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-kula-400 transition-colors group-hover:text-kula-700 dark:group-hover:text-kula-300" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M8 2v12M2 8h12" />
+            </svg>
+          )}
         </button>
       </div>
 
@@ -238,26 +255,33 @@ function PickerFlatRow({
   pending: boolean
 }) {
   return (
-    <li>
+    <li className="group flex items-center gap-1 pr-2 transition-colors hover:bg-[var(--surface-raised)]">
+      <div className="min-w-0 flex-1 px-4 py-2.5">
+        <span className={`block text-sm ${alreadyAdded ? 'text-kula-400 dark:text-kula-600' : 'font-medium text-kula-800 dark:text-kula-200'}`}>
+          {item.english}
+        </span>
+        {item.hebrew && (
+          <span className="block text-xs text-kula-400 dark:text-kula-500" dir="rtl">
+            {item.hebrew}
+          </span>
+        )}
+      </div>
       <button
         type="button"
         disabled={alreadyAdded || pending}
         onClick={() => onAdd(item)}
-        className="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-[var(--surface-raised)] disabled:cursor-default"
+        aria-label={alreadyAdded ? 'Already added' : `Add ${item.english}`}
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors disabled:cursor-default"
       >
-        <span className="min-w-0">
-          <span className={`block text-sm ${alreadyAdded ? 'text-kula-400 dark:text-kula-600' : 'font-medium text-kula-800 dark:text-kula-200'}`}>
-            {item.english}
-          </span>
-          {item.hebrew && (
-            <span className="block text-xs text-kula-400 dark:text-kula-600" dir="rtl">
-              {item.hebrew}
-            </span>
-          )}
-        </span>
-        <span className="ml-3 shrink-0 text-xs text-kula-400 dark:text-kula-600">
-          {alreadyAdded ? 'Added' : item.totalRefs.toLocaleString()}
-        </span>
+        {alreadyAdded ? (
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-kula-400 dark:text-kula-600" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 8l4 4 6-7" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-kula-400 transition-colors group-hover:text-kula-700 dark:group-hover:text-kula-300" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M8 2v12M2 8h12" />
+          </svg>
+        )}
       </button>
     </li>
   )
