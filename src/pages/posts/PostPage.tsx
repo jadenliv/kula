@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { usePost, useDeletePost } from '../../hooks/usePosts'
+import { usePost, useDeletePost, useAdminDeletePost } from '../../hooks/usePosts'
 import { useAuth } from '../../context/AuthContext'
+import { isAdmin } from '../../lib/adminConfig'
 import { MarkdownBody } from '../../components/posts/MarkdownBody'
 import { PostPrivacyIcon } from '../../components/posts/PostCard'
 import { POST_PRIVACY_LABELS } from '../../components/posts/PostPrivacySelector'
@@ -22,7 +23,9 @@ export default function PostPage() {
   const navigate = useNavigate()
   const { data: post, isLoading } = usePost(id)
   const deletePost = useDeletePost()
+  const adminDelete = useAdminDeletePost()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmAdminDelete, setConfirmAdminDelete] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -58,6 +61,7 @@ export default function PostPage() {
   // is a safety net for when the follow graph is added and RLS is relaxed.
 
   const isAuthor = user?.id === post.user_id
+  const isModerator = isAdmin(user?.id) && !isAuthor
 
   if (post.privacy === 'followers' && !isAuthor) {
     return (
@@ -114,6 +118,40 @@ export default function PostPage() {
             <>
               <span>·</span>
               <ReportButton targetType="post" targetId={post.id} />
+            </>
+          )}
+          {isModerator && (
+            <>
+              <span>·</span>
+              {confirmAdminDelete ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="text-red-500">Remove this post?</span>
+                  <button
+                    type="button"
+                    onClick={() => adminDelete.mutate({ id: post.id }, { onSuccess: () => navigate('/admin/posts') })}
+                    disabled={adminDelete.isPending}
+                    className="font-medium text-red-500 hover:text-red-600"
+                  >
+                    {adminDelete.isPending ? 'Removing…' : 'Yes, remove'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAdminDelete(false)}
+                    className="text-kula-400 hover:text-kula-600"
+                  >
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmAdminDelete(true)}
+                  className="text-red-400 transition-colors hover:text-red-500"
+                  title="Moderator: remove this post"
+                >
+                  Remove (mod)
+                </button>
+              )}
             </>
           )}
           {isAuthor && (

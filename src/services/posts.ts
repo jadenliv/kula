@@ -162,3 +162,47 @@ export async function deletePost(id: string): Promise<void> {
     .eq('id', id)
   if (error) throw error
 }
+
+/**
+ * Moderator hard-delete: permanently removes a post by ID regardless of
+ * ownership. Relies on the admin RLS policy allowing admins to delete any row.
+ * Use `isAdmin()` to gate this in the UI before calling.
+ */
+export async function adminDeletePost(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('posts')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+/**
+ * Fetch all non-deleted posts across all users, newest first.
+ * Only succeeds for admin users — RLS blocks everyone else.
+ */
+export type AdminPost = Post & { author_username?: string; author_display_name?: string }
+
+export async function listAllPostsAdmin(): Promise<AdminPost[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  if (!data?.length) return []
+
+  // Attach author profiles (posts → auth.users, not profiles, so manual join)
+  const userIds = [...new Set(data.map((p) => p.user_id))]
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, username, display_name')
+    .in('id', userIds)
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]))
+
+  return data.map((p) => ({
+    ...(p as Post),
+    author_username: profileMap.get(p.user_id)?.username,
+    author_display_name: profileMap.get(p.user_id)?.display_name,
+  }))
+}

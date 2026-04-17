@@ -71,13 +71,21 @@ function ReportsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="font-serif text-3xl tracking-tight text-kula-900 dark:text-kula-50">
-          Reports
-        </h2>
-        <p className="mt-1 text-sm text-kula-500 dark:text-kula-400">
-          {unhandledCount} unhandled · {allReports.length} total
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="font-serif text-3xl tracking-tight text-kula-900 dark:text-kula-50">
+            Reports
+          </h2>
+          <p className="mt-1 text-sm text-kula-500 dark:text-kula-400">
+            {unhandledCount} unhandled · {allReports.length} total
+          </p>
+        </div>
+        <Link
+          to="/admin/posts"
+          className="text-xs text-kula-400 transition-colors hover:text-kula-700 dark:text-kula-600 dark:hover:text-kula-300"
+        >
+          Manage posts →
+        </Link>
       </div>
 
       {/* Filter tabs */}

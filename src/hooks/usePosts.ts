@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  adminDeletePost,
   createPost,
   deletePost,
   getPost,
+  listAllPostsAdmin,
   listOwnPosts,
   listPostsForUser,
   updatePost,
+  type AdminPost,
   type CreatePostInput,
   type Post,
   type UpdatePostInput,
@@ -105,6 +108,32 @@ export function useDeletePost() {
   return useMutation({
     mutationFn: ({ id }: { id: string }) => deletePost(id),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: POSTS_KEY })
+    },
+  })
+}
+
+// ── Admin / moderator hooks ───────────────────────────────────────────────────
+
+const ADMIN_POSTS_KEY = ['admin', 'posts'] as const
+
+export function useAllPostsAdmin() {
+  const { user } = useAuth()
+  return useQuery<AdminPost[]>({
+    queryKey: ADMIN_POSTS_KEY,
+    queryFn: listAllPostsAdmin,
+    enabled: Boolean(user),
+    staleTime: 1000 * 30,
+  })
+}
+
+export function useAdminDeletePost() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) => adminDeletePost(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_POSTS_KEY })
       void queryClient.invalidateQueries({ queryKey: POSTS_KEY })
     },
   })
