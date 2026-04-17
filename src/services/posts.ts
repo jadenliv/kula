@@ -130,7 +130,7 @@ export async function createPost(input: CreatePostInput): Promise<Post> {
     })
     .select()
     .single()
-  if (error) throw error
+  if (error) throw new Error(error.message)
   return data as Post
 }
 

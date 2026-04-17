@@ -35,7 +35,11 @@ export default function NewPost() {
       {
         onSuccess: (post) => navigate(`/posts/${post.id}`),
         onError: (err) =>
-          setError(err instanceof Error ? err.message : 'Failed to publish.'),
+          setError(
+            err instanceof Error
+              ? err.message
+              : (err as { message?: string })?.message ?? 'Failed to publish.',
+          ),
       },
     )
   }
