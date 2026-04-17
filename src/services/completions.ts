@@ -1,6 +1,8 @@
 // Completions service layer — all reads/writes for public.completions.
-// RLS on the table ensures users can only see/touch their own rows, so we
-// don't need to pass user_id explicitly to reads.
+// Always filter by user_id explicitly — do NOT rely on RLS alone, because
+// the feed migration opened RLS to allow reading other users' activity for
+// the social feed. Without the explicit filter, Browse would show other
+// users' checkmarks to the current viewer.
 
 import { supabase } from '../lib/supabase'
 
@@ -12,11 +14,15 @@ export type Completion = {
   completed_at: string
 }
 
-/** Fetch every completion for the signed-in user. */
+/** Fetch every completion for the signed-in user only. */
 export async function listCompletions(): Promise<Completion[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
   const { data, error } = await supabase
     .from('completions')
     .select('*')
+    .eq('user_id', user.id)
     .order('completed_at', { ascending: false })
   if (error) throw error
   return data ?? []
