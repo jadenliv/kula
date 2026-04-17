@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import {
   addCompletion,
@@ -9,8 +9,25 @@ import {
   type Completion,
 } from '../services/completions'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 const COMPLETIONS_KEY = ['completions'] as const
+
+// ── Debounced re-sync ─────────────────────────────────────────────────────────
+// After every write (success or error), we schedule a single re-fetch from the
+// DB 1.5 seconds later. Multiple rapid mutations collapse into one re-fetch.
+// This guarantees the cache eventually reflects true DB state without causing
+// the "flicker-back" that an immediate refetch can produce.
+
+let _syncTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleSyncWithDb(queryClient: QueryClient) {
+  if (_syncTimer) clearTimeout(_syncTimer)
+  _syncTimer = setTimeout(() => {
+    void queryClient.invalidateQueries({ queryKey: COMPLETIONS_KEY })
+    _syncTimer = null
+  }, 1500)
+}
 
 /**
  * Load every completion for the current user. Cached in React Query.
@@ -45,15 +62,12 @@ export function useCompletedRefSet(): Set<string> {
 
 /**
  * Toggle a single completion on/off. Optimistic — the UI updates immediately.
- *
- * KEY DESIGN: we do NOT invalidate/refetch on success. The optimistic data
- * is authoritative. A refetch on success can return stale server data (the
- * write may not have propagated yet) causing the checkbox to flicker back.
- * On error we roll back the optimistic state AND refetch to re-sync with
- * the true server state.
+ * A debounced re-sync with the DB fires 1.5 s after the last write to confirm
+ * the true server state without causing immediate flicker.
  */
 export function useToggleCompletion() {
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   return useMutation({
     mutationFn: async ({
@@ -71,8 +85,8 @@ export function useToggleCompletion() {
     },
 
     onMutate: async ({ ref, currentlyChecked }) => {
-      // Cancel any in-flight fetches so they don't clobber our optimistic update.
       await queryClient.cancelQueries({ queryKey: COMPLETIONS_KEY })
+      // Read AFTER cancel so we always build on the latest cache state.
       const previous =
         queryClient.getQueryData<Completion[]>(COMPLETIONS_KEY) ?? []
 
@@ -94,8 +108,6 @@ export function useToggleCompletion() {
     },
 
     onSuccess: (_data, { ref, currentlyChecked }) => {
-      // Write confirmed. Clean up the optimistic ID so it no longer looks
-      // temporary — but keep the data as-is (no refetch needed).
       if (!currentlyChecked) {
         queryClient.setQueryData<Completion[]>(COMPLETIONS_KEY, (old) =>
           old?.map((c) =>
@@ -103,14 +115,15 @@ export function useToggleCompletion() {
           ) ?? [],
         )
       }
+      scheduleSyncWithDb(queryClient)
     },
 
     onError: (_err, _vars, ctx) => {
-      // Roll back the optimistic update and refetch true server state.
       if (ctx?.previous) {
         queryClient.setQueryData(COMPLETIONS_KEY, ctx.previous)
       }
       void queryClient.invalidateQueries({ queryKey: COMPLETIONS_KEY })
+      showToast('Could not save — check your connection and try again.')
     },
   })
 }
@@ -118,11 +131,10 @@ export function useToggleCompletion() {
 /**
  * Bulk-toggle a group of refs on or off. Used for parent-check fan-out
  * (clicking the checkbox next to "Bereshit" marks all 50 perakim).
- *
- * Same no-refetch-on-success strategy as useToggleCompletion.
  */
 export function useToggleRefsBulk() {
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   return useMutation({
     mutationFn: async ({
@@ -167,7 +179,6 @@ export function useToggleRefsBulk() {
     },
 
     onSuccess: (_data, { refs, action }) => {
-      // Confirm all optimistic rows by replacing their temporary IDs.
       if (action === 'add') {
         const refSet = new Set(refs)
         queryClient.setQueryData<Completion[]>(COMPLETIONS_KEY, (old) =>
@@ -178,14 +189,15 @@ export function useToggleRefsBulk() {
           ) ?? [],
         )
       }
+      scheduleSyncWithDb(queryClient)
     },
 
     onError: (_err, _vars, ctx) => {
-      // Roll back and re-sync from server.
       if (ctx?.previous) {
         queryClient.setQueryData(COMPLETIONS_KEY, ctx.previous)
       }
       void queryClient.invalidateQueries({ queryKey: COMPLETIONS_KEY })
+      showToast('Could not save — check your connection and try again.')
     },
   })
 }
