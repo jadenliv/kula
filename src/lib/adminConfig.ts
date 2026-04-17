@@ -5,7 +5,7 @@
  * Find your user UUID in Supabase Dashboard → Authentication → Users.
  */
 export const ADMIN_USER_IDS: string[] = [
-  // 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+  '936edc86-c923-47fe-ab14-4e1d84daab92',
 ]
 
 export function isAdmin(userId: string | undefined): boolean {
