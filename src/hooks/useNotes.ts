@@ -6,6 +6,7 @@ import {
   listNotes,
   updateNote,
   type Note,
+  type NotePrivacy,
 } from '../services/notes'
 import { useAuth } from '../context/AuthContext'
 
@@ -46,9 +47,19 @@ export function useAddNote() {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: ({ ref, body, tags }: { ref: string; body: string; tags?: string[] }) =>
-      addNote(ref, body, tags ?? []),
-    onMutate: async ({ ref, body, tags }) => {
+    mutationFn: ({
+      ref,
+      body,
+      tags,
+      privacy,
+    }: {
+      ref: string
+      body: string
+      tags?: string[]
+      privacy?: NotePrivacy
+    }) => addNote(ref, body, tags ?? [], privacy ?? 'private'),
+
+    onMutate: async ({ ref, body, tags, privacy }) => {
       await queryClient.cancelQueries({ queryKey: NOTES_KEY })
       const previous = queryClient.getQueryData<Note[]>(NOTES_KEY) ?? []
       const now = new Date().toISOString()
@@ -58,6 +69,7 @@ export function useAddNote() {
         sefaria_ref: ref,
         body,
         tags: tags ?? [],
+        privacy: privacy ?? 'private',
         created_at: now,
         updated_at: now,
       }
@@ -73,20 +85,36 @@ export function useAddNote() {
   })
 }
 
-/** Update a note's body and/or tags. Optimistic. */
+/** Update a note's body, tags, and/or privacy. Optimistic. */
 export function useUpdateNote() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, body, tags }: { id: string; body: string; tags?: string[] }) =>
-      updateNote(id, body, tags),
-    onMutate: async ({ id, body, tags }) => {
+    mutationFn: ({
+      id,
+      body,
+      tags,
+      privacy,
+    }: {
+      id: string
+      body: string
+      tags?: string[]
+      privacy?: NotePrivacy
+    }) => updateNote(id, body, tags, privacy),
+
+    onMutate: async ({ id, body, tags, privacy }) => {
       await queryClient.cancelQueries({ queryKey: NOTES_KEY })
       const previous = queryClient.getQueryData<Note[]>(NOTES_KEY) ?? []
       const now = new Date().toISOString()
       const next = previous.map((n) =>
         n.id === id
-          ? { ...n, body, tags: tags ?? n.tags, updated_at: now }
+          ? {
+              ...n,
+              body,
+              tags: tags ?? n.tags,
+              privacy: privacy ?? n.privacy,
+              updated_at: now,
+            }
           : n,
       )
       queryClient.setQueryData<Note[]>(NOTES_KEY, next)

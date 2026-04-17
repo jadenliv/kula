@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { POSTS_ENABLED } from '../../lib/featureFlags'
 
 const THEME_KEY = 'kula-theme'
 
@@ -41,6 +42,19 @@ export function AppShell() {
       </div>
       {/* Mobile-only bottom navigation */}
       <BottomNav />
+
+      {/* Mobile FAB — compose new post, sits above the bottom nav */}
+      {POSTS_ENABLED && (
+        <Link
+          to="/posts/new"
+          aria-label="New post"
+          className="fixed bottom-20 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-kula-700 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 dark:bg-kula-400 dark:text-kula-950 md:hidden"
+        >
+          <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z" />
+          </svg>
+        </Link>
+      )}
     </div>
   )
 }

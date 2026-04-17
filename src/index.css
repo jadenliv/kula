@@ -65,3 +65,30 @@ body {
 [lang="he"], [dir="rtl"] {
   font-family: 'Heebo', ui-sans-serif, system-ui, sans-serif;
 }
+
+/* ── Post body prose styles ───────────────────────────────────────────────── */
+/* Applied via .prose-post on MarkdownBody. Avoids the @tailwindcss/typography
+   plugin dependency while giving posts a comfortable reading feel. */
+.prose-post p {
+  margin-bottom: 1.25em;
+  line-height: 1.75;
+}
+.prose-post p:last-child {
+  margin-bottom: 0;
+}
+.prose-post blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1rem;
+  margin: 1.25em 0;
+  color: var(--tw-prose-quote, #6b7280);
+  font-style: italic;
+}
+.dark .prose-post blockquote {
+  border-left-color: var(--border);
+}
+.prose-post strong {
+  font-weight: 600;
+}
+.prose-post em {
+  font-style: italic;
+}

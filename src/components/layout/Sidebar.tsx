@@ -1,5 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import { useTimer } from '../../context/TimerContext'
+import { useProfile } from '../../context/ProfileContext'
+import { Avatar } from '../ui/Avatar'
 
 const navItems = [
   {
@@ -46,6 +48,7 @@ const navItems = [
 
 export function Sidebar() {
   const { activeSession } = useTimer()
+  const { profile } = useProfile()
 
   return (
     <aside className="hidden w-52 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] transition-colors duration-200 md:flex md:flex-col">
@@ -82,6 +85,26 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* User info at the bottom */}
+      {profile && (
+        <div className="mt-auto border-t border-[var(--border)] p-3">
+          <Link
+            to={`/u/${profile.username}`}
+            className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-[var(--surface-raised)]"
+          >
+            <Avatar profile={profile} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-kula-700 dark:text-kula-300">
+                {profile.display_name || profile.username}
+              </p>
+              <p className="truncate text-[10px] text-kula-400 dark:text-kula-600">
+                @{profile.username}
+              </p>
+            </div>
+          </Link>
+        </div>
+      )}
     </aside>
   )
 }

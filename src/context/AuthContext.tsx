@@ -45,23 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, displayName: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
+      // Pass display_name in user metadata so the DB trigger can read it via
+      // raw_user_meta_data->>'display_name' when creating the profiles row.
       options: { data: { display_name: displayName } },
     })
     if (error) throw error
-
-    // Create the profiles row for this user. If email confirmation is required,
-    // data.session will be null and this insert will fail RLS — in that case we
-    // rely on a DB trigger (see migrations) to create the profile on confirm.
-    if (data.user && data.session) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        user_id: data.user.id,
-        display_name: displayName,
-      })
-      if (profileError) throw profileError
-    }
+    // Profile creation is handled by the handle_new_user() trigger — no manual
+    // insert needed here. That also avoids RLS issues when email confirmation
+    // is required and the session is null at signup time.
   }
 
   const signOut = async () => {

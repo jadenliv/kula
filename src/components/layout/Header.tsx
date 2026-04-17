@@ -1,5 +1,8 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ZemanimBar } from '../zemanim/ZemanimBar'
+import { UserMenu } from './UserMenu'
+import { POSTS_ENABLED } from '../../lib/featureFlags'
 
 type Props = {
   onToggleTheme: () => void
@@ -7,7 +10,7 @@ type Props = {
 }
 
 export function Header({ onToggleTheme, isDark }: Props) {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
 
   return (
     <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-[var(--border)] bg-[var(--app-bg)]/90 px-4 py-2.5 backdrop-blur-md transition-colors duration-200 md:gap-4 md:px-6 md:py-3">
@@ -40,15 +43,19 @@ export function Header({ onToggleTheme, isDark }: Props) {
         >
           {isDark ? '☀' : '☾'}
         </button>
-        {user && (
-          <button
-            type="button"
-            onClick={() => void signOut()}
-            className="hidden rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-kula-600 transition-colors hover:border-kula-400 hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-300 md:block"
+        {user && POSTS_ENABLED && (
+          <Link
+            to="/posts/new"
+            aria-label="New post"
+            title="New post"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
           >
-            Sign out
-          </button>
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z" />
+            </svg>
+          </Link>
         )}
+        {user && <UserMenu />}
       </div>
     </header>
   )
