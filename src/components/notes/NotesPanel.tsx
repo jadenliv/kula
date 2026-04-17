@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useAddNote,
   useDeleteNote,
+  useNotes,
   useNotesForRef,
   useUpdateNote,
 } from '../../hooks/useNotes'
@@ -14,11 +15,132 @@ type Props = {
   onClose: () => void
 }
 
+// ── Tag input ─────────────────────────────────────────────────────────────────
+
+function TagInput({
+  tags,
+  onChange,
+  allTags,
+}: {
+  tags: string[]
+  onChange: (tags: string[]) => void
+  allTags: string[]
+}) {
+  const [input, setInput] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const suggestions = useMemo(() => {
+    if (!input.trim()) return []
+    const q = input.toLowerCase()
+    return allTags.filter(
+      (t) => t.toLowerCase().startsWith(q) && !tags.includes(t),
+    ).slice(0, 5)
+  }, [input, allTags, tags])
+
+  const addTag = (raw: string) => {
+    const tag = raw.trim().toLowerCase()
+    if (!tag || tags.includes(tag)) { setInput(''); return }
+    onChange([...tags, tag])
+    setInput('')
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addTag(input)
+    } else if (e.key === 'Backspace' && !input && tags.length > 0) {
+      onChange(tags.slice(0, -1))
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <div
+        className="flex flex-wrap items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] px-2.5 py-1.5 transition-colors focus-within:border-kula-400"
+        onClick={() => inputRef.current?.focus()}
+      >
+        {tags.map((tag) => (
+          <span
+            key={tag}
+            className="flex items-center gap-1 rounded-full bg-kula-500/10 px-2 py-0.5 text-xs font-medium text-kula-600 dark:bg-kula-400/10 dark:text-kula-400"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChange(tags.filter((t) => t !== tag)) }}
+              className="rounded-full text-kula-400 hover:text-kula-700 dark:hover:text-kula-200"
+              aria-label={`Remove tag ${tag}`}
+            >
+              <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M2 2l8 8M10 2L2 10" />
+              </svg>
+            </button>
+          </span>
+        ))}
+        <input
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={tags.length === 0 ? 'Add tags…' : ''}
+          className="min-w-16 flex-1 bg-transparent text-xs text-kula-900 placeholder:text-kula-400 focus:outline-none dark:text-kula-100"
+        />
+      </div>
+      {/* Autocomplete suggestions */}
+      {suggestions.length > 0 && (
+        <div className="mt-1 flex flex-wrap gap-1">
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => addTag(s)}
+              className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs text-kula-500 hover:border-kula-400 hover:text-kula-700 dark:text-kula-500 dark:hover:text-kula-300"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="mt-1 text-xs text-kula-400 dark:text-kula-600">Enter or comma to add a tag</p>
+    </div>
+  )
+}
+
+// ── Tag pills (read-only) ─────────────────────────────────────────────────────
+
+export function TagPills({ tags }: { tags: string[] }) {
+  if (tags.length === 0) return null
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {tags.map((tag) => (
+        <span
+          key={tag}
+          className="rounded-full bg-kula-500/10 px-2 py-0.5 text-xs font-medium text-kula-600 dark:bg-kula-400/10 dark:text-kula-400"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ── Main panel ────────────────────────────────────────────────────────────────
+
 export function NotesPanel({ refId, open, onClose }: Props) {
   const notes = useNotesForRef(refId)
+  const { data: allNotes = [] } = useNotes()
   const addNote = useAddNote()
   const [draft, setDraft] = useState('')
+  const [draftTags, setDraftTags] = useState<string[]>([])
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // Collect all unique tags the user has ever used for autocomplete
+  const allTags = useMemo(() => {
+    const set = new Set<string>()
+    for (const n of allNotes) for (const t of n.tags) set.add(t)
+    return Array.from(set).sort()
+  }, [allNotes])
 
   useEffect(() => {
     if (open && textareaRef.current) textareaRef.current.focus()
@@ -26,9 +148,7 @@ export function NotesPanel({ refId, open, onClose }: Props) {
 
   useEffect(() => {
     if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
@@ -36,7 +156,10 @@ export function NotesPanel({ refId, open, onClose }: Props) {
   const handleSubmit = () => {
     const body = draft.trim()
     if (!body) return
-    addNote.mutate({ ref: refId, body }, { onSuccess: () => setDraft('') })
+    addNote.mutate(
+      { ref: refId, body, tags: draftTags },
+      { onSuccess: () => { setDraft(''); setDraftTags([]) } },
+    )
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -90,7 +213,9 @@ export function NotesPanel({ refId, open, onClose }: Props) {
               No notes yet. Write your first thought below.
             </p>
           ) : (
-            notes.map((note) => <NoteRow key={note.id} note={note} />)
+            notes.map((note) => (
+              <NoteRow key={note.id} note={note} allTags={allTags} />
+            ))
           )}
         </div>
 
@@ -104,6 +229,7 @@ export function NotesPanel({ refId, open, onClose }: Props) {
             placeholder="Add a note…"
             className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-2.5 text-sm text-kula-900 placeholder:text-kula-400 transition-colors focus:border-kula-400 focus:outline-none dark:text-kula-100 dark:placeholder:text-kula-600"
           />
+          <TagInput tags={draftTags} onChange={setDraftTags} allTags={allTags} />
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-xs text-kula-400">⌘/Ctrl + Enter to save</span>
             <button
@@ -121,9 +247,12 @@ export function NotesPanel({ refId, open, onClose }: Props) {
   )
 }
 
-function NoteRow({ note }: { note: Note }) {
+// ── Note row ──────────────────────────────────────────────────────────────────
+
+function NoteRow({ note, allTags }: { note: Note; allTags: string[] }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(note.body)
+  const [editTags, setEditTags] = useState<string[]>(note.tags)
   const update = useUpdateNote()
   const remove = useDeleteNote()
 
@@ -131,16 +260,16 @@ function NoteRow({ note }: { note: Note }) {
 
   const handleSave = () => {
     const body = draft.trim()
-    if (!body || body === note.body) {
-      setEditing(false)
-      setDraft(note.body)
-      return
-    }
-    update.mutate({ id: note.id, body }, { onSuccess: () => setEditing(false) })
+    if (!body) { setEditing(false); setDraft(note.body); return }
+    update.mutate(
+      { id: note.id, body, tags: editTags },
+      { onSuccess: () => setEditing(false) },
+    )
   }
 
   const handleCancel = () => {
     setDraft(note.body)
+    setEditTags(note.tags)
     setEditing(false)
   }
 
@@ -154,12 +283,9 @@ function NoteRow({ note }: { note: Note }) {
             rows={3}
             className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--app-bg)] p-2 text-sm text-kula-900 focus:border-kula-400 focus:outline-none dark:text-kula-100"
           />
+          <TagInput tags={editTags} onChange={setEditTags} allTags={allTags} />
           <div className="mt-2 flex justify-end gap-2 text-xs">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="rounded-lg px-2 py-1 text-kula-500 hover:text-kula-800 dark:hover:text-kula-200"
-            >
+            <button type="button" onClick={handleCancel} className="rounded-lg px-2 py-1 text-kula-500 hover:text-kula-800 dark:hover:text-kula-200">
               Cancel
             </button>
             <button
@@ -177,6 +303,7 @@ function NoteRow({ note }: { note: Note }) {
           <p className="whitespace-pre-wrap text-sm text-kula-800 dark:text-kula-200">
             {note.body}
           </p>
+          <TagPills tags={note.tags} />
           <div className="mt-2 flex items-center justify-between text-xs text-kula-500">
             <time dateTime={note.created_at}>
               {formatTimestamp(note.created_at)}
@@ -190,7 +317,7 @@ function NoteRow({ note }: { note: Note }) {
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => setEditing(true)}
+                onClick={() => { setEditTags(note.tags); setEditing(true) }}
                 disabled={isOptimistic}
                 className="hover:text-kula-700 disabled:opacity-40 dark:hover:text-kula-300"
               >
@@ -219,9 +346,7 @@ function formatTimestamp(iso: string): string {
     d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate()
-  if (sameDay) {
-    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-  }
+  if (sameDay) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
   return d.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',

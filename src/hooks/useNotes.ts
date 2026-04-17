@@ -46,9 +46,9 @@ export function useAddNote() {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: ({ ref, body }: { ref: string; body: string }) =>
-      addNote(ref, body),
-    onMutate: async ({ ref, body }) => {
+    mutationFn: ({ ref, body, tags }: { ref: string; body: string; tags?: string[] }) =>
+      addNote(ref, body, tags ?? []),
+    onMutate: async ({ ref, body, tags }) => {
       await queryClient.cancelQueries({ queryKey: NOTES_KEY })
       const previous = queryClient.getQueryData<Note[]>(NOTES_KEY) ?? []
       const now = new Date().toISOString()
@@ -57,6 +57,7 @@ export function useAddNote() {
         user_id: user?.id ?? 'optimistic',
         sefaria_ref: ref,
         body,
+        tags: tags ?? [],
         created_at: now,
         updated_at: now,
       }
@@ -72,19 +73,21 @@ export function useAddNote() {
   })
 }
 
-/** Update a note's body. Optimistic. */
+/** Update a note's body and/or tags. Optimistic. */
 export function useUpdateNote() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: string }) =>
-      updateNote(id, body),
-    onMutate: async ({ id, body }) => {
+    mutationFn: ({ id, body, tags }: { id: string; body: string; tags?: string[] }) =>
+      updateNote(id, body, tags),
+    onMutate: async ({ id, body, tags }) => {
       await queryClient.cancelQueries({ queryKey: NOTES_KEY })
       const previous = queryClient.getQueryData<Note[]>(NOTES_KEY) ?? []
       const now = new Date().toISOString()
       const next = previous.map((n) =>
-        n.id === id ? { ...n, body, updated_at: now } : n,
+        n.id === id
+          ? { ...n, body, tags: tags ?? n.tags, updated_at: now }
+          : n,
       )
       queryClient.setQueryData<Note[]>(NOTES_KEY, next)
       return { previous }
