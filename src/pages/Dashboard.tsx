@@ -9,7 +9,7 @@ import { useTimer } from '../context/TimerContext'
 import { Spinner } from '../components/ui/Spinner'
 import type { LearningSession } from '../services/sessions'
 import type { UserSefer } from '../services/userSefarim'
-import { getPickerItems, refsForSefer, type PickerItem } from '../lib/catalogUtils'
+import { getPickerItems, getPickerTree, refsForSefer, type PickerItem, type PickerTreeNode } from '../lib/catalogUtils'
 import type { Completion } from '../services/completions'
 
 // ── Time formatting ──────────────────────────────────────────────────────────
@@ -129,6 +129,142 @@ function calcSeferProgress(
 // SEFER PICKER
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ── Picker tree row (recursive accordion) ────────────────────────────────────
+
+type AddHandler = (node: { english: string; hebrew?: string; totalRefs: number }) => void
+
+function PickerTreeRow({
+  node,
+  depth,
+  existingIds,
+  onAdd,
+  pending,
+}: {
+  node: PickerTreeNode
+  depth: number
+  existingIds: Set<string>
+  onAdd: AddHandler
+  pending: boolean
+}) {
+  // Top-level nodes start collapsed; everything else starts collapsed too.
+  const [expanded, setExpanded] = useState(false)
+  const hasChildren = node.children.length > 0
+  const alreadyAdded = existingIds.has(node.english)
+
+  return (
+    <div>
+      <div
+        className="flex items-center transition-colors hover:bg-[var(--surface-raised)]"
+        style={{ paddingLeft: `${depth * 1.25 + 0.75}rem` }}
+      >
+        {/* Expand / collapse chevron */}
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            className="mr-1.5 flex h-6 w-5 shrink-0 items-center justify-center rounded text-kula-400 hover:text-kula-700 dark:hover:text-kula-200"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              className={`h-3 w-3 transition-transform duration-150 ${expanded ? 'rotate-90' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 3l6 5-6 5" />
+            </svg>
+          </button>
+        ) : (
+          // Spacer so leaf-level items line up
+          <span className="mr-1.5 w-5 shrink-0" />
+        )}
+
+        {/* Selectable row — clicking adds this sefer */}
+        <button
+          type="button"
+          disabled={alreadyAdded || pending}
+          onClick={() => onAdd(node)}
+          className="flex flex-1 items-center justify-between py-2.5 pr-4 text-left disabled:cursor-default"
+        >
+          <span className="min-w-0">
+            <span className={`block text-sm ${alreadyAdded ? 'text-kula-400 dark:text-kula-600' : 'font-medium text-kula-800 dark:text-kula-200'}`}>
+              {node.english}
+            </span>
+            {node.hebrew && (
+              <span className="block text-xs text-kula-400 dark:text-kula-600" dir="rtl">
+                {node.hebrew}
+              </span>
+            )}
+          </span>
+          <span className="ml-3 shrink-0 text-xs text-kula-400 dark:text-kula-600">
+            {alreadyAdded ? 'Added' : node.totalRefs.toLocaleString()}
+          </span>
+        </button>
+      </div>
+
+      {/* Children */}
+      {expanded && hasChildren && (
+        <div>
+          {node.children.map((child) => (
+            <PickerTreeRow
+              key={child.english}
+              node={child}
+              depth={depth + 1}
+              existingIds={existingIds}
+              onAdd={onAdd}
+              pending={pending}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Flat search result row ────────────────────────────────────────────────────
+
+function PickerFlatRow({
+  item,
+  alreadyAdded,
+  onAdd,
+  pending,
+}: {
+  item: PickerItem
+  alreadyAdded: boolean
+  onAdd: (item: PickerItem) => void
+  pending: boolean
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={alreadyAdded || pending}
+        onClick={() => onAdd(item)}
+        className="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-[var(--surface-raised)] disabled:cursor-default"
+      >
+        <span className="min-w-0">
+          <span className={`block text-sm ${alreadyAdded ? 'text-kula-400 dark:text-kula-600' : 'font-medium text-kula-800 dark:text-kula-200'}`}>
+            {item.english}
+          </span>
+          {item.hebrew && (
+            <span className="block text-xs text-kula-400 dark:text-kula-600" dir="rtl">
+              {item.hebrew}
+            </span>
+          )}
+        </span>
+        <span className="ml-3 shrink-0 text-xs text-kula-400 dark:text-kula-600">
+          {alreadyAdded ? 'Added' : item.totalRefs.toLocaleString()}
+        </span>
+      </button>
+    </li>
+  )
+}
+
+// ── Picker modal ──────────────────────────────────────────────────────────────
+
 function SeferPicker({
   onClose,
   existingIds,
@@ -138,10 +274,14 @@ function SeferPicker({
 }) {
   const [query, setQuery] = useState('')
   const addSefer = useAddUserSefer()
+
+  // For search: flat list
   const allItems = useMemo(() => getPickerItems(), [])
+  // For browse: tree
+  const tree = useMemo(() => getPickerTree(), [])
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return allItems
+    if (!query.trim()) return []
     const q = query.toLowerCase()
     return allItems.filter(
       (item) =>
@@ -150,32 +290,23 @@ function SeferPicker({
     )
   }, [query, allItems])
 
-  // Group by topCategory for display when no query
-  const grouped = useMemo(() => {
-    if (query.trim()) return null
-    const map = new Map<string, PickerItem[]>()
-    for (const item of filtered) {
-      const list = map.get(item.topCategory)
-      if (list) list.push(item)
-      else map.set(item.topCategory, [item])
-    }
-    return Array.from(map.entries())
-  }, [filtered, query])
-
-  const handleAdd = (item: PickerItem) => {
+  const handleAddFlat = (item: PickerItem) => {
     if (existingIds.has(item.english)) return
     addSefer.mutate(
-      {
-        seferId: item.english,
-        seferLabelEn: item.english,
-        seferLabelHe: item.hebrew ?? null,
-      },
+      { seferId: item.english, seferLabelEn: item.english, seferLabelHe: item.hebrew ?? null },
+      { onSuccess: onClose },
+    )
+  }
+
+  const handleAddTree = (node: { english: string; hebrew?: string }) => {
+    if (existingIds.has(node.english)) return
+    addSefer.mutate(
+      { seferId: node.english, seferLabelEn: node.english, seferLabelHe: node.hebrew ?? null },
       { onSuccess: onClose },
     )
   }
 
   return (
-    // Backdrop
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
@@ -207,10 +338,10 @@ function SeferPicker({
           />
         </div>
 
-        {/* List */}
+        {/* Content */}
         <div className="overflow-y-auto">
           {query.trim() ? (
-            // Flat search results
+            // ── Flat search results ──
             filtered.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm text-kula-400 dark:text-kula-600">
                 No results for "{query}"
@@ -218,81 +349,34 @@ function SeferPicker({
             ) : (
               <ul>
                 {filtered.map((item) => (
-                  <PickerRow
+                  <PickerFlatRow
                     key={item.english}
                     item={item}
                     alreadyAdded={existingIds.has(item.english)}
-                    onAdd={handleAdd}
+                    onAdd={handleAddFlat}
                     pending={addSefer.isPending}
                   />
                 ))}
               </ul>
             )
           ) : (
-            // Grouped browse
-            grouped?.map(([category, items]) => (
-              <div key={category}>
-                <p className="sticky top-0 bg-[var(--surface)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-kula-400 dark:text-kula-600">
-                  {category}
-                </p>
-                <ul>
-                  {items.map((item) => (
-                    <PickerRow
-                      key={item.english}
-                      item={item}
-                      alreadyAdded={existingIds.has(item.english)}
-                      onAdd={handleAdd}
-                      pending={addSefer.isPending}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ))
+            // ── Accordion tree browse ──
+            <div className="py-1">
+              {tree.map((topNode) => (
+                <PickerTreeRow
+                  key={topNode.english}
+                  node={topNode}
+                  depth={0}
+                  existingIds={existingIds}
+                  onAdd={handleAddTree}
+                  pending={addSefer.isPending}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>
     </div>
-  )
-}
-
-function PickerRow({
-  item,
-  alreadyAdded,
-  onAdd,
-  pending,
-}: {
-  item: PickerItem
-  alreadyAdded: boolean
-  onAdd: (item: PickerItem) => void
-  pending: boolean
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        disabled={alreadyAdded || pending}
-        onClick={() => onAdd(item)}
-        className="flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-[var(--surface-raised)] disabled:cursor-default"
-      >
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-kula-800 dark:text-kula-200">
-            {item.english}
-          </span>
-          {item.hebrew && (
-            <span className="block text-xs text-kula-400 dark:text-kula-600" dir="rtl">
-              {item.hebrew}
-            </span>
-          )}
-        </span>
-        {alreadyAdded ? (
-          <span className="ml-3 shrink-0 text-xs text-kula-400 dark:text-kula-600">Added</span>
-        ) : (
-          <span className="ml-3 shrink-0 text-xs text-kula-400 dark:text-kula-600">
-            {item.totalRefs.toLocaleString()} refs
-          </span>
-        )}
-      </button>
-    </li>
   )
 }
 

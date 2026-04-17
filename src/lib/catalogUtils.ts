@@ -110,3 +110,38 @@ export function getPickerItems(): PickerItem[] {
   if (!_pickerItems) _pickerItems = buildPickerItems()
   return _pickerItems
 }
+
+// ── Picker tree (for accordion browse) ───────────────────────────────────────
+
+/**
+ * A node in the picker tree. Only group nodes are included — leaf nodes
+ * (individual daf/pasuk) are filtered out because "currently learning" tracks
+ * at the sefer or section level, not individual entries.
+ */
+export type PickerTreeNode = {
+  english: string
+  hebrew?: string
+  totalRefs: number
+  children: PickerTreeNode[]
+}
+
+function buildGroupTree(nodes: CatalogNode[]): PickerTreeNode[] {
+  const result: PickerTreeNode[] = []
+  for (const node of nodes) {
+    if (node.ref) continue // leaf — skip
+    const children = buildGroupTree(node.children ?? [])
+    result.push({
+      english: node.english,
+      hebrew: node.hebrew,
+      totalRefs: collectRefs(node).length,
+      children,
+    })
+  }
+  return result
+}
+
+let _pickerTree: PickerTreeNode[] | null = null
+export function getPickerTree(): PickerTreeNode[] {
+  if (!_pickerTree) _pickerTree = buildGroupTree(catalog.children)
+  return _pickerTree
+}
