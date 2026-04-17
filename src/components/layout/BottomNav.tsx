@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useTimer } from '../../context/TimerContext'
 
 const navItems = [
   {
@@ -7,9 +8,18 @@ const navItems = [
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
         <rect x="3" y="4" width="18" height="18" rx="2" />
-        <path d="M3 9h18" />
-        <path d="M8 2v3M16 2v3" />
-        <path d="M8 14h2M13 14h2M8 17h2" />
+        <path d="M3 9h18M8 2v3M16 2v3M8 14h2M13 14h2M8 17h2" />
+      </svg>
+    ),
+  },
+  {
+    to: '/dashboard',
+    label: 'Dashboard',
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+        <rect x="3" y="14" width="4" height="7" rx="1" />
+        <rect x="10" y="9" width="4" height="12" rx="1" />
+        <rect x="17" y="4" width="4" height="17" rx="1" />
       </svg>
     ),
   },
@@ -28,14 +38,15 @@ const navItems = [
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
         <path d="M7 3h11a1 1 0 011 1v14a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-        <path d="M5 5v16" />
-        <path d="M9 9h7M9 12h7M9 15h5" />
+        <path d="M5 5v16M9 9h7M9 12h7M9 15h5" />
       </svg>
     ),
   },
 ]
 
 export function BottomNav() {
+  const { activeSession } = useTimer()
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-md md:hidden">
       {navItems.map((item) => (
@@ -52,7 +63,15 @@ export function BottomNav() {
         >
           {({ isActive }) => (
             <>
-              <span>{item.icon(isActive)}</span>
+              <span className="relative">
+                {item.icon(isActive)}
+                {item.to === '/dashboard' && activeSession && (
+                  <span className="absolute -right-1 -top-1 flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-kula-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-kula-500 dark:bg-kula-400" />
+                  </span>
+                )}
+              </span>
               <span>{item.label}</span>
             </>
           )}
