@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { LocationProvider } from './context/LocationContext'
 import { TimerProvider } from './context/TimerContext'
 import { ToastProvider } from './context/ToastContext'
@@ -24,7 +24,25 @@ import AdminReports from './pages/admin/Reports'
 import AdminPosts from './pages/admin/Posts'
 import Feed from './pages/Feed'
 import Discover from './pages/Discover'
+import Landing from './pages/Landing'
+import Privacy from './pages/static/Privacy'
+import Terms from './pages/static/Terms'
+import Contact from './pages/static/Contact'
+import About from './pages/static/About'
 import { POSTS_ENABLED } from './lib/featureFlags'
+
+/**
+ * RootRoute — shown at "/".
+ * Logged-in users are sent straight to /today.
+ * Logged-out (or still loading) visitors see the public landing page.
+ * We intentionally show Landing during the auth-loading state rather than a
+ * blank screen; ProtectedRoute handles the real redirect for inner routes.
+ */
+function RootRoute() {
+  const { user, loading } = useAuth()
+  if (!loading && user) return <Navigate to="/today" replace />
+  return <Landing />
+}
 
 function App() {
   return (
@@ -35,8 +53,16 @@ function App() {
             <ToastProvider>
               <ProfileProvider>
                 <Routes>
+                  {/* Public routes — no auth required */}
+                  <Route path="/" element={<RootRoute />} />
                   <Route path="/signin" element={<SignIn />} />
                   <Route path="/signup" element={<SignUp />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/about" element={<About />} />
+
+                  {/* Protected app routes */}
                   <Route
                     element={
                       <ProtectedRoute>
@@ -75,10 +101,10 @@ function App() {
                         <Route path="/posts/:id/edit" element={<EditPost />} />
                       </>
                     )}
-
-                    <Route path="/" element={<Navigate to="/today" replace />} />
                   </Route>
-                  <Route path="*" element={<Navigate to="/today" replace />} />
+
+                  {/* Catch-all → landing */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </ProfileProvider>
             </ToastProvider>
