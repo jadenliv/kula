@@ -84,16 +84,15 @@ type LearningSchedule = {
   titleEn: string
   label: string
   hebrew: string
-  accent: string
 }
 
 const LEARNING_SCHEDULES: LearningSchedule[] = [
-  { titleEn: 'Parashat Hashavua',         label: 'Parashat HaShavuah', hebrew: 'פרשת השבוע',    accent: 'text-kula-600 dark:text-kula-300' },
-  { titleEn: 'Daf Yomi',                  label: 'Daf Yomi',           hebrew: 'דף יומי',         accent: 'text-kula-500 dark:text-kula-400' },
-  { titleEn: 'Yerushalmi Yomi',           label: 'Yerushalmi Yomi',    hebrew: 'ירושלמי יומי',    accent: 'text-kula-700 dark:text-kula-200' },
-  { titleEn: 'Daily Mishnah',             label: 'Mishna Yomit',       hebrew: 'משנה יומית',      accent: 'text-kula-600 dark:text-kula-300' },
-  { titleEn: 'Daily Rambam',              label: 'Rambam (1 Perek)',   hebrew: 'רמב״ם יומי',      accent: 'text-kula-500 dark:text-kula-400' },
-  { titleEn: 'Daily Rambam (3 Chapters)', label: 'Rambam (3 Perakim)', hebrew: 'רמב״ם (3 פרקים)', accent: 'text-kula-700 dark:text-kula-200' },
+  { titleEn: 'Parashat Hashavua',         label: 'Parashat HaShavuah', hebrew: 'פרשת השבוע'    },
+  { titleEn: 'Daf Yomi',                  label: 'Daf Yomi',           hebrew: 'דף יומי'        },
+  { titleEn: 'Yerushalmi Yomi',           label: 'Yerushalmi Yomi',    hebrew: 'ירושלמי יומי'   },
+  { titleEn: 'Daily Mishnah',             label: 'Mishna Yomit',       hebrew: 'משנה יומית'     },
+  { titleEn: 'Daily Rambam',              label: 'Rambam (1 Perek)',   hebrew: 'רמב״ם יומי'     },
+  { titleEn: 'Daily Rambam (3 Chapters)', label: 'Rambam (3 Perakim)', hebrew: 'רמב״ם (3 פרקים)'},
 ]
 
 // ---------------------------------------------------------------------------
@@ -242,12 +241,12 @@ export default function Today() {
 
         {!learningLoading && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {LEARNING_SCHEDULES.map(({ titleEn, label, hebrew, accent }) => {
+            {LEARNING_SCHEDULES.map(({ titleEn, label, hebrew }) => {
               const item = learningByTitle.get(titleEn)
               const sefariaLink = item ? `https://www.sefaria.org/${item.url}?lang=bi` : null
               return (
                 <div key={titleEn} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
-                  <p className={`mb-0.5 text-xs font-semibold uppercase tracking-wider ${accent}`}>
+                  <p className="mb-0.5 text-xs font-semibold uppercase tracking-wider text-kula-500 dark:text-kula-400">
                     {label}
                   </p>
                   <p className="mb-2.5 text-xs text-kula-400 dark:text-kula-600" dir="rtl">
