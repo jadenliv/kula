@@ -284,6 +284,7 @@ function Step2Profile({
           </label>
           <input
             type="text"
+            dir="auto"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={80}
@@ -337,6 +338,7 @@ function Step2Profile({
             Bio <span className="text-xs font-normal text-kula-400">(optional)</span>
           </label>
           <textarea
+            dir="auto"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}

@@ -46,7 +46,7 @@ export function NotificationBell() {
         type="button"
         onClick={handleOpen}
         aria-label="Notifications"
-        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
+        className="relative flex h-10 w-10 items-center justify-center rounded-lg text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
       >
         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5A1 1 0 003.5 15h13a1 1 0 00.86-1.5L16 11V8a6 6 0 00-6-6z" />

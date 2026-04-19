@@ -235,7 +235,7 @@ export default function Notebook() {
           fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="8.5" cy="8.5" r="5.5" /><path d="M15 15l3 3" />
         </svg>
-        <input type="text" value={rawQuery} onChange={(e) => setRawQuery(e.target.value)}
+        <input type="text" dir="auto" value={rawQuery} onChange={(e) => setRawQuery(e.target.value)}
           placeholder="Search notes, refs, tags…"
           className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-9 text-sm text-kula-900 placeholder:text-kula-400 transition-colors focus:border-kula-400 focus:outline-none dark:text-kula-100" />
         {rawQuery && (

@@ -40,7 +40,7 @@ export function Header({ onToggleTheme, isDark }: Props) {
           type="button"
           onClick={onToggleTheme}
           aria-label="Toggle theme"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-sm text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
         >
           {isDark ? '☀' : '☾'}
         </button>
@@ -50,7 +50,7 @@ export function Header({ onToggleTheme, isDark }: Props) {
             to="/posts/new"
             aria-label="New post"
             title="New post"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-kula-500 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:text-kula-400 dark:hover:text-kula-200"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14.5 2.5a2.121 2.121 0 013 3L6 17H3v-3L14.5 2.5z" />

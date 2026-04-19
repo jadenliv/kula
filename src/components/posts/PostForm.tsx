@@ -59,6 +59,7 @@ export function PostForm({
       <div>
         <input
           type="text"
+          dir="auto"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={MAX_TITLE}
@@ -70,6 +71,7 @@ export function PostForm({
       {/* Body */}
       <div className="relative">
         <textarea
+          dir="auto"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={14}

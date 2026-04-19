@@ -156,6 +156,7 @@ function ProfileTab({ profile }: { profile: Profile }) {
       <Field label="Display name">
         <input
           type="text"
+          dir="auto"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={80}
@@ -183,6 +184,7 @@ function ProfileTab({ profile }: { profile: Profile }) {
 
       <Field label="Bio">
         <textarea
+          dir="auto"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={3}

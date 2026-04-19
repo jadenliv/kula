@@ -69,6 +69,7 @@ export function MarkdownBody({ body, className = '' }: Props) {
       // Safe: all HTML is escaped before pattern substitution
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: html }}
+      dir="auto"
       className={`prose-post ${className}`}
     />
   )

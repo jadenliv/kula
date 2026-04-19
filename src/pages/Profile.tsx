@@ -133,7 +133,7 @@ function ProfileHeader({
           </h1>
           <p className="text-sm text-kula-400 dark:text-kula-600">@{profile.username}</p>
           {profile.bio && (
-            <p className="mt-2 text-sm text-kula-700 dark:text-kula-300">{profile.bio}</p>
+            <p dir="auto" className="mt-2 text-sm text-kula-700 dark:text-kula-300">{profile.bio}</p>
           )}
         </div>
 

@@ -58,7 +58,7 @@ export function BottomNav() {
   const { activeSession } = useTimer()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-md md:hidden">
+    <nav className="safe-bottom fixed bottom-0 left-0 right-0 z-30 flex border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-md md:hidden">
       {navItems.map((item) => (
         <NavLink
           key={item.to}

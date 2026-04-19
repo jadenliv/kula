@@ -173,6 +173,7 @@ function TagInput({
         <input
           ref={inputRef}
           type="text"
+          dir="auto"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -303,7 +304,7 @@ export function NotesPanel({ refId, open, onClose }: Props) {
             <h3 className="font-serif text-lg text-kula-900 dark:text-kula-50">{refId}</h3>
           </div>
           <button type="button" onClick={onClose} aria-label="Close notes"
-            className="rounded-lg p-1.5 text-kula-400 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:hover:text-kula-200">
+            className="rounded-lg p-2 text-kula-400 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:hover:text-kula-200">
             <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 5l10 10M15 5L5 15" />
             </svg>
@@ -320,9 +321,10 @@ export function NotesPanel({ refId, open, onClose }: Props) {
           )}
         </div>
 
-        <footer className="border-t border-[var(--border)] px-4 py-3">
+        <footer className="safe-bottom border-t border-[var(--border)] px-4 py-3">
           <textarea
             ref={textareaRef}
+            dir="auto"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -377,7 +379,7 @@ function NoteRow({ note, allTags, profileIsPrivate }: { note: Note; allTags: str
     <article className="rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-3">
       {editing ? (
         <>
-          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={3}
+          <textarea dir="auto" value={draft} onChange={(e) => setDraft(e.target.value)} rows={3}
             className="w-full resize-none rounded-lg border border-[var(--border)] bg-[var(--app-bg)] p-2 text-sm text-kula-900 focus:border-kula-400 focus:outline-none dark:text-kula-100" />
           <TagInput tags={editTags} onChange={setEditTags} allTags={allTags} />
           <PrivacySelector value={editPrivacy} onChange={setEditPrivacy} profileIsPrivate={profileIsPrivate} />
@@ -391,7 +393,7 @@ function NoteRow({ note, allTags, profileIsPrivate }: { note: Note; allTags: str
         </>
       ) : (
         <>
-          <p className="whitespace-pre-wrap text-sm text-kula-800 dark:text-kula-200">{note.body}</p>
+          <p dir="auto" className="whitespace-pre-wrap text-sm text-kula-800 dark:text-kula-200">{note.body}</p>
           <TagPills tags={note.tags} />
           <div className="mt-2 flex items-center justify-between text-xs text-kula-500">
             <div className="flex items-center gap-2">

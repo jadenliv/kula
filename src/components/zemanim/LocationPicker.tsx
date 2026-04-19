@@ -136,6 +136,7 @@ export function LocationPicker({ onClose }: Props) {
         <input
           ref={inputRef}
           type="text"
+          dir="auto"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="City, neighborhood, or zip code"

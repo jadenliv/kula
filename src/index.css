@@ -61,6 +61,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Prevent iOS Safari from auto-zooming when an input receives focus.
+   iOS zooms in whenever a focused input has font-size < 16px.
+   We only apply this on touch-primary devices so desktop appearance
+   (which uses text-sm / text-xs via Tailwind) is unchanged. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe-area padding for fixed bottom elements (iPhone X+ home bar) */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Hebrew text uses Heebo — modern, no Times New Roman fallback */
 [lang="he"], [dir="rtl"] {
   font-family: 'Heebo', ui-sans-serif, system-ui, sans-serif;

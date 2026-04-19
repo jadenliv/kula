@@ -180,7 +180,7 @@ function NoteItem({ item }: { item: FeedItemNote }) {
 
       {/* Body */}
       <div className="px-4 py-3">
-        <p className="whitespace-pre-wrap text-sm text-kula-800 dark:text-kula-200">
+        <p dir="auto" className="whitespace-pre-wrap text-sm text-kula-800 dark:text-kula-200">
           {displayBody}
         </p>
         {isTruncated && (
@@ -248,11 +248,11 @@ function PostItem({ item }: { item: FeedItemPost }) {
       {/* Body */}
       <Link to={`/posts/${post.id}`} className="block px-4 py-3 hover:bg-[var(--surface-raised)] transition-colors">
         {post.title && (
-          <p className="mb-1.5 font-serif text-base font-medium text-kula-900 dark:text-kula-50">
+          <p dir="auto" className="mb-1.5 font-serif text-base font-medium text-kula-900 dark:text-kula-50">
             {post.title}
           </p>
         )}
-        <p className="whitespace-pre-wrap text-sm text-kula-700 dark:text-kula-300">
+        <p dir="auto" className="whitespace-pre-wrap text-sm text-kula-700 dark:text-kula-300">
           {preview}
         </p>
         {post.body.length > POST_PREVIEW_LENGTH && (
