@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -7,23 +7,22 @@ import { Card } from '../components/ui/Card'
 
 export default function SignUp() {
   const { signUp } = useAuth()
+  const navigate = useNavigate()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    setInfo(null)
     setSubmitting(true)
     try {
       await signUp(email, password, displayName)
-      // If Supabase requires email confirmation, there's no session yet.
-      // Tell the user to check their email; otherwise navigate to the app.
-      setInfo('Check your email to confirm your account, then sign in.')
+      // Email confirmation is disabled — Supabase returns a live session
+      // immediately, so send the user straight into the app.
+      navigate('/onboarding', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed')
     } finally {
@@ -85,11 +84,6 @@ export default function SignUp() {
             {error && (
               <p className="text-sm text-red-400" role="alert">
                 {error}
-              </p>
-            )}
-            {info && (
-              <p className="text-sm text-kula-600 dark:text-kula-300" role="status">
-                {info}
               </p>
             )}
 
