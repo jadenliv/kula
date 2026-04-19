@@ -6,6 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
+import { reverseGeocode } from '../services/geocoding'
 
 const LOCATION_KEY = 'kula-location'
 
@@ -48,13 +49,13 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     setIsDetecting(true)
     setDetectionError(null)
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc: LocationData = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          label: 'Current Location',
-          tzid: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        }
+      async (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        // Reverse-geocode the coordinates to get a real city name and
+        // the correct IANA timezone for the detected location.
+        const { label, tzid } = await reverseGeocode(lat, lng)
+        const loc: LocationData = { lat, lng, label, tzid }
         setLocation(loc)
         localStorage.setItem(LOCATION_KEY, JSON.stringify(loc))
         setIsDetecting(false)
