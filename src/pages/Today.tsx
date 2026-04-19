@@ -1,6 +1,7 @@
 import { useZmanim } from '../hooks/useZmanim'
 import { useDailyLearning } from '../hooks/useDailyLearning'
 import { useLocation } from '../context/LocationContext'
+import { useProfile } from '../context/ProfileContext'
 import { Spinner } from '../components/ui/Spinner'
 import { type ZmanimTimes, type HebCalEvent } from '../services/hebcal'
 import { LocationPicker } from '../components/zemanim/LocationPicker'
@@ -100,9 +101,15 @@ const LEARNING_SCHEDULES: LearningSchedule[] = [
 // ---------------------------------------------------------------------------
 export default function Today() {
   const { location } = useLocation()
+  const { profile } = useProfile()
   const { data: zmanimData, isLoading: zmanimLoading } = useZmanim()
   const { data: learningData, isLoading: learningLoading } = useDailyLearning()
   const [locationPickerOpen, setLocationPickerOpen] = useState(false)
+
+  // Filter cycles by user preference. null/empty = show all six (fallback).
+  const activeCycleIds = profile?.daily_cycles?.length
+    ? new Set(profile.daily_cycles)
+    : null // null = no filter, show all
 
   const nextKey = zmanimData ? findNextZmanKey(zmanimData.times) : null
   const hebrewDate = formatHebrewDate()
@@ -241,7 +248,9 @@ export default function Today() {
 
         {!learningLoading && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {LEARNING_SCHEDULES.map(({ titleEn, label, hebrew }) => {
+            {LEARNING_SCHEDULES.filter(({ titleEn }) =>
+              activeCycleIds === null || activeCycleIds.has(titleEn)
+            ).map(({ titleEn, label, hebrew }) => {
               const item = learningByTitle.get(titleEn)
               const sefariaLink = item ? `https://www.sefaria.org/${item.url}?lang=bi` : null
               return (

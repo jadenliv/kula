@@ -12,6 +12,12 @@ export type Profile = {
   share_posts: 'public' | 'followers' | 'private'
   /** Who can see the Posts section on this user's profile. */
   posts_page_privacy: 'public' | 'followers' | 'private'
+  /** Whether the user has completed the onboarding flow. */
+  onboarding_completed: boolean
+  /** Which step the user is currently on (1-6). Used to resume on refresh. */
+  onboarding_step: number
+  /** IDs of daily learning cycles the user follows. null = not yet set (show all). */
+  daily_cycles: string[] | null
   created_at: string
   updated_at: string
 }
@@ -27,6 +33,9 @@ export type ProfileUpdate = Partial<
     | 'share_notes'
     | 'share_posts'
     | 'posts_page_privacy'
+    | 'onboarding_completed'
+    | 'onboarding_step'
+    | 'daily_cycles'
   >
 >
 

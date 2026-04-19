@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { OnboardingGate } from './components/OnboardingGate'
+import Onboarding from './pages/Onboarding'
 import { LocationProvider } from './context/LocationContext'
 import { TimerProvider } from './context/TimerContext'
 import { ToastProvider } from './context/ToastContext'
@@ -62,11 +64,23 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/about" element={<About />} />
 
-                  {/* Protected app routes */}
+                  {/* Onboarding — protected (needs auth) but outside the OnboardingGate */}
+                  <Route
+                    path="/onboarding"
+                    element={
+                      <ProtectedRoute>
+                        <Onboarding />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Protected app routes — OnboardingGate redirects incomplete users */}
                   <Route
                     element={
                       <ProtectedRoute>
-                        <AppShell />
+                        <OnboardingGate>
+                          <AppShell />
+                        </OnboardingGate>
                       </ProtectedRoute>
                     }
                   >

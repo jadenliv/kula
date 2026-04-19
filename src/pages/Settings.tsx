@@ -6,9 +6,10 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { Avatar } from '../components/ui/Avatar'
 import { Spinner } from '../components/ui/Spinner'
+import LearningSettings from './settings/Learning'
 import type { Profile, ProfileUpdate } from '../services/profiles'
 
-type Tab = 'profile' | 'privacy' | 'account'
+type Tab = 'profile' | 'learning' | 'privacy' | 'account'
 
 const USERNAME_RE = /^[a-z0-9_]{3,30}$/
 
@@ -45,7 +46,7 @@ export default function Settings() {
 
       {/* Tab bar */}
       <div className="flex gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-1">
-        {(['profile', 'privacy', 'account'] as Tab[]).map((t) => (
+        {(['profile', 'learning', 'privacy', 'account'] as Tab[]).map((t) => (
           <button
             key={t}
             type="button"
@@ -62,6 +63,7 @@ export default function Settings() {
       </div>
 
       {tab === 'profile' && <ProfileTab profile={profile} />}
+      {tab === 'learning' && <LearningSettings />}
       {tab === 'privacy' && <PrivacyTab profile={profile} />}
       {tab === 'account' && <AccountTab />}
     </div>
