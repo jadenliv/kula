@@ -6,7 +6,7 @@ import { Spinner } from '../components/ui/Spinner'
 import { ReportButton } from '../components/profile/ReportButton'
 import { PrivacyIcon } from '../components/notes/NotesPanel'
 import { PostPrivacyIcon } from '../components/posts/PostCard'
-import type { FeedItem, FeedItemActivity, FeedItemNote, FeedItemPost, FeedProfile } from '../services/feed'
+import type { FeedItem, FeedItemNote, FeedItemPost, FeedProfile } from '../services/feed'
 import type { NotePrivacy } from '../services/notes'
 
 export default function Feed() {
@@ -93,51 +93,9 @@ function FeedHeader() {
 
 function FeedItemRow({ item }: { item: FeedItem }) {
   switch (item.type) {
-    case 'activity': return <ActivityItem item={item} />
     case 'note': return <NoteItem item={item} />
     case 'post': return <PostItem item={item} />
   }
-}
-
-// ── Activity item ─────────────────────────────────────────────────────────────
-
-function ActivityItem({ item }: { item: FeedItemActivity }) {
-  const name = item.profile.display_name || item.profile.username
-
-  // "learned 3 sections in Bavli Berakhot"
-  // "learned 5 sections across Berakhot and Shabbat"
-  // "learned 8 sections across 3 sefarim"
-  let sefarimText: string
-  if (item.sefarim.length === 1) {
-    sefarimText = `in ${item.sefarim[0]}`
-  } else if (item.sefarim.length === 2) {
-    sefarimText = `across ${item.sefarim[0]} and ${item.sefarim[1]}`
-  } else {
-    sefarimText = `across ${item.sefarim.length} sefarim`
-  }
-
-  const sectionWord = item.count === 1 ? 'section' : 'sections'
-  const dayLabel = isToday(item.day) ? 'today' : onDay(item.day)
-
-  return (
-    <Link
-      to="/browse"
-      className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition-colors hover:border-kula-400/50 hover:bg-[var(--surface-raised)]"
-    >
-      <ProfileAvatar profile={item.profile} />
-      <p className="min-w-0 flex-1 text-sm text-kula-700 dark:text-kula-300">
-        <span className="font-medium text-kula-900 dark:text-kula-100">{name}</span>
-        {' '}learned{' '}
-        <span className="font-medium text-kula-900 dark:text-kula-100">
-          {item.count} {sectionWord}
-        </span>
-        {' '}{sefarimText} {dayLabel}.
-      </p>
-      <time className="shrink-0 text-xs text-kula-400 dark:text-kula-600">
-        {timeAgo(item.date)}
-      </time>
-    </Link>
-  )
 }
 
 // ── Note item ─────────────────────────────────────────────────────────────────
@@ -288,11 +246,3 @@ function timeAgo(iso: string): string {
   return `${days}d ago`
 }
 
-function isToday(day: string): boolean {
-  return day === new Date().toISOString().slice(0, 10)
-}
-
-function onDay(day: string): string {
-  const d = new Date(day + 'T12:00:00')
-  return `on ${d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}`
-}

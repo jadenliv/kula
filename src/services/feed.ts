@@ -8,20 +8,6 @@ export type FeedProfile = {
   display_name: string
 }
 
-export type FeedItemActivity = {
-  type: 'activity'
-  /** Stable key: `${userId}:${day}` */
-  id: string
-  profile: FeedProfile
-  /** YYYY-MM-DD */
-  day: string
-  /** ISO timestamp of the latest completion in this group (used for sorting). */
-  date: string
-  count: number
-  /** Unique sefer names extracted from refs. */
-  sefarim: string[]
-}
-
 export type FeedItemNote = {
   type: 'note'
   id: string
@@ -53,7 +39,9 @@ export type FeedItemPost = {
   date: string
 }
 
-export type FeedItem = FeedItemActivity | FeedItemNote | FeedItemPost
+// Activity items (completion check-offs) are intentionally not shown on the
+// feed — learning progress is private by default.
+export type FeedItem = FeedItemNote | FeedItemPost
 
 export type FeedResult = {
   items: FeedItem[]
@@ -61,62 +49,9 @@ export type FeedResult = {
   hasFollows: boolean
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const FEED_WINDOW_DAYS = 7
-
-/**
- * Strip the trailing numeric locator from a Sefaria ref to get the sefer name.
- * "Berakhot 2a" → "Berakhot", "Rashi on Berakhot 2a:3" → "Rashi on Berakhot"
- */
-function extractSefer(ref: string): string {
-  const parts = ref.split(/\s+/)
-  for (let i = parts.length - 1; i >= 0; i--) {
-    if (/\d/.test(parts[i])) {
-      const sefer = parts.slice(0, i).join(' ').replace(/,\s*$/, '').trim()
-      return sefer || ref
-    }
-  }
-  return ref
-}
-
-function buildActivityItems(
-  completions: { user_id: string; sefaria_ref: string; completed_at: string }[],
-  profileMap: Map<string, FeedProfile>,
-): FeedItemActivity[] {
-  // Group by (user_id, YYYY-MM-DD) — one activity item per person per day.
-  const groups = new Map<
-    string,
-    { userId: string; day: string; refs: string[]; latestDate: string }
-  >()
-
-  for (const c of completions) {
-    const day = c.completed_at.slice(0, 10)
-    const key = `${c.user_id}:${day}`
-    if (!groups.has(key)) {
-      groups.set(key, { userId: c.user_id, day, refs: [], latestDate: c.completed_at })
-    }
-    const g = groups.get(key)!
-    g.refs.push(c.sefaria_ref)
-    if (c.completed_at > g.latestDate) g.latestDate = c.completed_at
-  }
-
-  const items: FeedItemActivity[] = []
-  for (const [key, g] of groups) {
-    const profile = profileMap.get(g.userId)
-    if (!profile) continue
-    items.push({
-      type: 'activity',
-      id: key,
-      profile,
-      day: g.day,
-      date: g.latestDate,
-      count: g.refs.length,
-      sefarim: [...new Set(g.refs.map(extractSefer))],
-    })
-  }
-  return items
-}
 
 // ── Main query ────────────────────────────────────────────────────────────────
 
@@ -138,22 +73,15 @@ export async function getFeedItems(): Promise<FeedResult> {
 
   const since = new Date(Date.now() - FEED_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
-  // Fetch profiles, completions, notes, and posts in parallel.
-  // RLS on each table controls what rows are actually returned — privacy is
-  // enforced at the DB level; we filter in('user_id', followedIds) to scope
-  // the results to people this user follows.
-  const [profilesRes, completionsRes, notesRes, postsRes] = await Promise.all([
+  // Fetch profiles, notes, and posts in parallel.
+  // Completions are deliberately excluded — learning progress is private.
+  // RLS on each table controls what rows are returned; we filter by followedIds
+  // to scope results to people this user follows.
+  const [profilesRes, notesRes, postsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, username, display_name')
       .in('id', followedIds),
-
-    supabase
-      .from('completions')
-      .select('user_id, sefaria_ref, completed_at')
-      .in('user_id', followedIds)
-      .gte('completed_at', since)
-      .order('completed_at', { ascending: false }),
 
     supabase
       .from('notes')
@@ -176,8 +104,6 @@ export async function getFeedItems(): Promise<FeedResult> {
   const profileMap = new Map(
     (profilesRes.data ?? []).map((p) => [p.id, p as FeedProfile]),
   )
-
-  const activityItems = buildActivityItems(completionsRes.data ?? [], profileMap)
 
   const noteItems: FeedItemNote[] = (notesRes.data ?? [])
     .map((n) => {
@@ -207,7 +133,7 @@ export async function getFeedItems(): Promise<FeedResult> {
     })
     .filter((x): x is FeedItemPost => x !== null)
 
-  const allItems = [...activityItems, ...noteItems, ...postItems].sort((a, b) =>
+  const allItems = [...noteItems, ...postItems].sort((a, b) =>
     b.date.localeCompare(a.date),
   )
 
