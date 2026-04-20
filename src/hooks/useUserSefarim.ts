@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { track } from '@vercel/analytics'
 import {
   addUserSefer,
   listUserSefarim,
@@ -24,8 +25,11 @@ export function useAddUserSefer() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: addUserSefer,
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: USER_SEFARIM_KEY })
+      // Track: user added a sefer to their active learning list.
+      // sefer_label_en is the human-readable title — not PII.
+      track('sefer_added_active', { sefer_name: variables.seferLabelEn })
     },
   })
 }

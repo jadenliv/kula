@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { track } from '@vercel/analytics'
 import { useCreatePost } from '../../hooks/usePosts'
 import { useProfile } from '../../context/ProfileContext'
 import { PostForm } from '../../components/posts/PostForm'
@@ -33,7 +34,11 @@ export default function NewPost() {
     create.mutate(
       { title: title || undefined, body, privacy },
       {
-        onSuccess: (post) => navigate(`/posts/${post.id}`),
+        onSuccess: (post) => {
+          // Track: post published. privacy_level is behavioral signal, not PII.
+          track('post_created', { privacy_level: privacy })
+          navigate(`/posts/${post.id}`)
+        },
         onError: (err) =>
           setError(
             err instanceof Error

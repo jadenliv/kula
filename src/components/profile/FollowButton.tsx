@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import { track } from '@vercel/analytics'
 import { useFollowStatus, useFollowUser, useUnfollowUser } from '../../hooks/useFollows'
 
 type Props = {
   targetUserId: string
+  /** Optional: the target profile's visibility setting. Used for analytics only. */
+  targetVisibility?: 'public' | 'private'
 }
 
-export function FollowButton({ targetUserId }: Props) {
+export function FollowButton({ targetUserId, targetVisibility }: Props) {
   const { data: followStatus, isLoading } = useFollowStatus(targetUserId)
   const follow = useFollowUser(targetUserId)
   const unfollow = useUnfollowUser(targetUserId)
@@ -20,7 +23,14 @@ export function FollowButton({ targetUserId }: Props) {
     return (
       <button
         type="button"
-        onClick={() => follow.mutate()}
+        onClick={() => {
+          follow.mutate()
+          // Track: follow initiated. target_profile_visibility tells us whether
+          // users prefer public or private follows — not PII.
+          track('follow_created', {
+            target_profile_visibility: targetVisibility ?? 'public',
+          })
+        }}
         disabled={isPending}
         className="rounded-xl bg-kula-700 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-kula-800 disabled:opacity-50 dark:bg-kula-400 dark:text-kula-950 dark:hover:bg-kula-300"
       >

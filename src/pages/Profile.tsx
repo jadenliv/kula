@@ -61,7 +61,10 @@ export default function Profile() {
               : 'This profile is private. Follow to request access.'}
           </p>
           {ownProfile && !isOwner && (
-            <FollowButton targetUserId={profile.id} />
+            <FollowButton
+              targetUserId={profile.id}
+              targetVisibility={profile.visibility as 'public' | 'private'}
+            />
           )}
         </div>
       </div>
@@ -147,7 +150,12 @@ function ProfileHeader({
               Edit profile
             </Link>
           ) : (
-            showFollowButton && <FollowButton targetUserId={profile.id} />
+            showFollowButton && (
+              <FollowButton
+                targetUserId={profile.id}
+                targetVisibility={profile.visibility as 'public' | 'private'}
+              />
+            )
           )}
           {!isOwner && ownProfile && (
             <ReportButton targetType="user" targetId={profile.id} />

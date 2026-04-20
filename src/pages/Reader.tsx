@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 import { useNotesForRef } from '../hooks/useNotes'
 import { sefariaUrl } from '../data/catalog'
 import { NotesPanel } from '../components/notes/NotesPanel'
@@ -102,13 +103,15 @@ export default function Reader() {
         thoughts here.
       </p>
 
-      {/* Notes panel */}
+      {/* Notes panel — wrapped in its own error boundary; it's the note editor */}
       {decodedRef && (
-        <NotesPanel
-          refId={decodedRef}
-          open={panelOpen}
-          onClose={() => setPanelOpen(false)}
-        />
+        <Sentry.ErrorBoundary fallback={<></>}>
+          <NotesPanel
+            refId={decodedRef}
+            open={panelOpen}
+            onClose={() => setPanelOpen(false)}
+          />
+        </Sentry.ErrorBoundary>
       )}
     </div>
   )

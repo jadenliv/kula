@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { track } from '@vercel/analytics'
 import {
   useAddNote,
   useDeleteNote,
@@ -260,6 +261,8 @@ export function NotesPanel({ refId, open, onClose }: Props) {
   const handleSubmit = () => {
     const body = draft.trim()
     if (!body) return
+    // Capture privacy before clearing draft state for use in the callback.
+    const privacyAtSubmit = draftPrivacy
     addNote.mutate(
       { ref: refId, body, tags: draftTags, privacy: draftPrivacy },
       {
@@ -267,6 +270,8 @@ export function NotesPanel({ refId, open, onClose }: Props) {
           setDraft('')
           setDraftTags([])
           setDraftPrivacy(defaultPrivacy)
+          // Track: note saved. privacy_level is behavioral signal, not PII.
+          track('note_created', { privacy_level: privacyAtSubmit })
         },
       },
     )

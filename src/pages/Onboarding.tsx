@@ -16,6 +16,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { track } from '@vercel/analytics'
 import { useOwnProfile, useUpdateProfile } from '../hooks/useProfile'
 import { useUserSefarim, useAddUserSefer, useRemoveUserSefer } from '../hooks/useUserSefarim'
 import { isUsernameAvailable } from '../services/profiles'
@@ -738,6 +739,8 @@ export default function Onboarding() {
   // Local step state — initialized from server once profile loads.
   const [step, setStep] = useState<number | null>(null)
   const [initialized, setInitialized] = useState(false)
+  // Track how many optional steps the user explicitly skipped.
+  const [stepsSkipped, setStepsSkipped] = useState(0)
 
   // Respect the stored theme preference (same key as AppShell uses).
   useEffect(() => {
@@ -797,15 +800,16 @@ export default function Onboarding() {
     await saveAndAdvance(4, { daily_cycles: cycles.length > 0 ? cycles : null })
   }
 
-  const handleStep3Skip = () => advanceStep(4)
+  const handleStep3Skip = () => { setStepsSkipped((n) => n + 1); advanceStep(4) }
 
   const handleStep4Next = () => advanceStep(5)
-  const handleStep4Skip = () => advanceStep(5)
+  const handleStep4Skip = () => { setStepsSkipped((n) => n + 1); advanceStep(5) }
 
   const handleStep5Next = () => advanceStep(6)
 
   const handleDone = async (destination: '/today' | '/notebook') => {
     await updateProfile.mutateAsync({ onboarding_completed: true, onboarding_step: 6 })
+    track('onboarding_completed', { steps_skipped: stepsSkipped })
     navigate(destination, { replace: true })
   }
 

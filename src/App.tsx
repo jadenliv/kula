@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import * as Sentry from '@sentry/react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { OnboardingGate } from './components/OnboardingGate'
 import Onboarding from './pages/Onboarding'
@@ -24,6 +25,7 @@ import FollowersList, { FollowingList } from './pages/profile/FollowersList'
 import FollowRequests from './pages/settings/FollowRequests'
 import AdminReports from './pages/admin/Reports'
 import AdminPosts from './pages/admin/Posts'
+import AdminStatus from './pages/admin/Status'
 import Feed from './pages/Feed'
 import Discover from './pages/Discover'
 import Landing from './pages/Landing'
@@ -46,86 +48,127 @@ function RootRoute() {
   return <Landing />
 }
 
+/** Generic error fallback shown when a Sentry error boundary catches. */
+function ErrorFallback({ resetError }: { resetError: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+      <p className="text-sm text-kula-500 dark:text-kula-400">
+        Something went wrong. Our team has been notified.
+      </p>
+      <button
+        type="button"
+        onClick={resetError}
+        className="rounded-xl border border-[var(--border)] px-4 py-2 text-xs text-kula-600 hover:border-kula-400 dark:text-kula-400"
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <LocationProvider>
-          <TimerProvider>
-            <ToastProvider>
-              <ProfileProvider>
-                <Routes>
-                  {/* Public routes — no auth required */}
-                  <Route path="/" element={<RootRoute />} />
-                  <Route path="/signin" element={<SignIn />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/about" element={<About />} />
+    // Outermost Sentry boundary — catches any error that escapes nested boundaries.
+    <Sentry.ErrorBoundary fallback={({ resetError }) => <ErrorFallback resetError={resetError} />}>
+      <BrowserRouter>
+        <AuthProvider>
+          <LocationProvider>
+            <TimerProvider>
+              <ToastProvider>
+                <ProfileProvider>
+                  <Routes>
+                    {/* Public routes — no auth required */}
+                    <Route path="/" element={<RootRoute />} />
+                    <Route path="/signin" element={<SignIn />} />
+                    <Route path="/signup" element={<SignUp />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/about" element={<About />} />
 
-                  {/* Onboarding — protected (needs auth) but outside the OnboardingGate */}
-                  <Route
-                    path="/onboarding"
-                    element={
-                      <ProtectedRoute>
-                        <Onboarding />
-                      </ProtectedRoute>
-                    }
-                  />
+                    {/* Onboarding — protected (needs auth) but outside the OnboardingGate */}
+                    <Route
+                      path="/onboarding"
+                      element={
+                        <ProtectedRoute>
+                          <Onboarding />
+                        </ProtectedRoute>
+                      }
+                    />
 
-                  {/* Protected app routes — OnboardingGate redirects incomplete users */}
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <OnboardingGate>
-                          <AppShell />
-                        </OnboardingGate>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route path="/today" element={<Today />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/browse" element={<Browse />} />
-                    <Route path="/read/:ref" element={<Reader />} />
-                    <Route path="/notebook" element={<Notebook />} />
+                    {/* Protected app routes — OnboardingGate redirects incomplete users */}
+                    <Route
+                      element={
+                        <ProtectedRoute>
+                          <OnboardingGate>
+                            <AppShell />
+                          </OnboardingGate>
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route path="/today" element={<Today />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/read/:ref" element={<Reader />} />
+                      <Route path="/notebook" element={<Notebook />} />
 
-                    {/* Social */}
-                    <Route path="/feed" element={<Feed />} />
-                    <Route path="/discover" element={<Discover />} />
+                      {/* Feed — gets its own error boundary: social feed is high-traffic */}
+                      <Route
+                        path="/feed"
+                        element={
+                          <Sentry.ErrorBoundary
+                            fallback={({ resetError }) => <ErrorFallback resetError={resetError} />}
+                          >
+                            <Feed />
+                          </Sentry.ErrorBoundary>
+                        }
+                      />
 
-                    {/* Profile pages */}
-                    <Route path="/u/:username" element={<Profile />} />
-                    <Route path="/u/:username/followers" element={<FollowersList />} />
-                    <Route path="/u/:username/following" element={<FollowingList />} />
+                      <Route path="/discover" element={<Discover />} />
 
-                    {/* Settings */}
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/settings/followers" element={<FollowRequests />} />
+                      {/* Profile pages */}
+                      <Route path="/u/:username" element={<Profile />} />
+                      <Route path="/u/:username/followers" element={<FollowersList />} />
+                      <Route path="/u/:username/following" element={<FollowingList />} />
 
-                    {/* Admin */}
-                    <Route path="/admin/reports" element={<AdminReports />} />
-                    <Route path="/admin/posts" element={<AdminPosts />} />
+                      {/* Settings */}
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/settings/followers" element={<FollowRequests />} />
 
-                    {/* Posts */}
-                    {POSTS_ENABLED && (
-                      <>
-                        <Route path="/posts/new" element={<NewPost />} />
-                        <Route path="/posts/:id" element={<PostPage />} />
-                        <Route path="/posts/:id/edit" element={<EditPost />} />
-                      </>
-                    )}
-                  </Route>
+                      {/* Admin */}
+                      <Route path="/admin/reports" element={<AdminReports />} />
+                      <Route path="/admin/posts" element={<AdminPosts />} />
+                      <Route path="/admin/status" element={<AdminStatus />} />
 
-                  {/* Catch-all → landing */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </ProfileProvider>
-            </ToastProvider>
-          </TimerProvider>
-        </LocationProvider>
-      </AuthProvider>
-    </BrowserRouter>
+                      {/* Posts — each gets its own error boundary (composer is high-risk) */}
+                      {POSTS_ENABLED && (
+                        <>
+                          <Route
+                            path="/posts/new"
+                            element={
+                              <Sentry.ErrorBoundary
+                                fallback={({ resetError }) => <ErrorFallback resetError={resetError} />}
+                              >
+                                <NewPost />
+                              </Sentry.ErrorBoundary>
+                            }
+                          />
+                          <Route path="/posts/:id" element={<PostPage />} />
+                          <Route path="/posts/:id/edit" element={<EditPost />} />
+                        </>
+                      )}
+                    </Route>
+
+                    {/* Catch-all → landing */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </ProfileProvider>
+              </ToastProvider>
+            </TimerProvider>
+          </LocationProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </Sentry.ErrorBoundary>
   )
 }
 

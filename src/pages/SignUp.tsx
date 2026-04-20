@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { track } from '@vercel/analytics'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -22,6 +23,7 @@ export default function SignUp() {
       await signUp(email, password, displayName)
       // Email confirmation is disabled — Supabase returns a live session
       // immediately, so send the user straight into the app.
+      track('sign_up_completed')
       navigate('/onboarding', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed')

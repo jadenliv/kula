@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { track } from '@vercel/analytics'
 import { submitReport, REPORT_REASONS, type ReportTargetType, type ReportReason } from '../../services/reports'
 
 type Props = {
@@ -29,6 +30,8 @@ export function ReportButton({ targetType, targetId }: Props) {
     try {
       await submitReport(targetType, targetId, reason, details, window.location.href)
       setSubmitted(true)
+      // Track: report submitted. target_type is content classification, not PII.
+      track('report_submitted', { target_type: targetType })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit report.')
     } finally {

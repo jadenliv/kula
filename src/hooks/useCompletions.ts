@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { track } from '@vercel/analytics'
 import {
   addCompletion,
   addCompletionsBulk,
@@ -10,6 +11,17 @@ import {
 } from '../services/completions'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+
+/**
+ * Derive the sefer name from a Sefaria ref by stripping the trailing
+ * address component (e.g. "Genesis 1:1" → "Genesis",
+ * "Berakhot 2a" → "Berakhot", "Mishnah Berakhot 1:1" → "Mishnah Berakhot").
+ * Used only for analytics — no need for perfect accuracy.
+ */
+function seferNameFromRef(ref: string): string {
+  const parts = ref.split(' ')
+  return parts.length > 1 ? parts.slice(0, -1).join(' ') : ref
+}
 
 const COMPLETIONS_KEY = ['completions'] as const
 
@@ -114,6 +126,12 @@ export function useToggleCompletion() {
             c.id === `optimistic-${ref}` ? { ...c, id: `confirmed-${ref}` } : c,
           ) ?? [],
         )
+        // Track: user marked a section as learned for the first time.
+        // ref is the Sefaria reference (e.g. "Berakhot 2a") — not PII.
+        track('section_marked_learned', {
+          sefer_name: seferNameFromRef(ref),
+          section_reference: ref,
+        })
       }
       scheduleSyncWithDb(queryClient)
     },
