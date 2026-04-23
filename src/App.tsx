@@ -26,6 +26,7 @@ import FollowRequests from './pages/settings/FollowRequests'
 import AdminReports from './pages/admin/Reports'
 import AdminPosts from './pages/admin/Posts'
 import AdminStatus from './pages/admin/Status'
+import AdminUsers from './pages/admin/Users'
 import Feed from './pages/Feed'
 import Discover from './pages/Discover'
 import Landing from './pages/Landing'
@@ -136,6 +137,7 @@ function App() {
                       <Route path="/settings/followers" element={<FollowRequests />} />
 
                       {/* Admin */}
+                      <Route path="/admin/users" element={<AdminUsers />} />
                       <Route path="/admin/reports" element={<AdminReports />} />
                       <Route path="/admin/posts" element={<AdminPosts />} />
                       <Route path="/admin/status" element={<AdminStatus />} />
