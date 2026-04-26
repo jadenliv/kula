@@ -6,6 +6,7 @@ import { useUserSefarim, useAddUserSefer, useUpdateUserSeferStatus, useRemoveUse
 import { useCompletions } from '../hooks/useCompletions'
 import { useNotes } from '../hooks/useNotes'
 import { useTimer } from '../context/TimerContext'
+import { useStreak } from '../hooks/useStreak'
 import { Spinner } from '../components/ui/Spinner'
 import type { LearningSession } from '../services/sessions'
 import type { UserSefer } from '../services/userSefarim'
@@ -908,9 +909,77 @@ function TimeTrackingSection() {
 export default function Dashboard() {
   return (
     <div className="mx-auto max-w-3xl space-y-10">
+      <StreakSection />
       <CurrentlyLearningSection />
       <RecentNotesSection />
       <TimeTrackingSection />
     </div>
+  )
+}
+
+// ── Streak section ────────────────────────────────────────────────────────────
+
+function StreakSection() {
+  const streak = useStreak()
+
+  if (streak.isLoading) return null
+
+  return (
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-kula-400 dark:text-kula-600">
+        Streak
+      </h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {/* Current streak */}
+        <div className={`rounded-xl border p-4 ${
+          streak.current > 0 && streak.learnedToday
+            ? 'border-orange-300/40 bg-orange-500/5 dark:border-orange-400/20 dark:bg-orange-400/5'
+            : 'border-[var(--border)] bg-[var(--surface)]'
+        }`}>
+          <div className="flex items-baseline gap-2">
+            <p className="font-serif text-2xl font-medium text-kula-800 dark:text-kula-200">
+              {streak.current > 0 ? `🔥 ${streak.current}` : '—'}
+            </p>
+          </div>
+          <p className="mt-1 text-xs text-kula-500 dark:text-kula-400">
+            {streak.current === 1 ? 'Day streak' : 'Day streak'}
+          </p>
+          {streak.current > 0 && !streak.learnedToday && (
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+              Learn today to keep it going
+            </p>
+          )}
+          {streak.current > 0 && streak.learnedToday && (
+            <p className="mt-1 text-xs text-kula-400 dark:text-kula-600">
+              Kept alive today ✓
+            </p>
+          )}
+        </div>
+
+        {/* Longest streak */}
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="font-serif text-2xl font-medium text-kula-800 dark:text-kula-200">
+            {streak.longest > 0 ? streak.longest : '—'}
+          </p>
+          <p className="mt-1 text-xs text-kula-500 dark:text-kula-400">Best streak</p>
+          {streak.longest > 0 && (
+            <p className="mt-1 text-xs text-kula-400 dark:text-kula-600">
+              {streak.longest === 1 ? '1 day' : `${streak.longest} days`}
+            </p>
+          )}
+        </div>
+
+        {/* Today's status */}
+        <div className="hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:block">
+          <p className="font-serif text-2xl font-medium text-kula-800 dark:text-kula-200">
+            {streak.learnedToday ? '✓' : '—'}
+          </p>
+          <p className="mt-1 text-xs text-kula-500 dark:text-kula-400">Today</p>
+          <p className="mt-1 text-xs text-kula-400 dark:text-kula-600">
+            {streak.learnedToday ? 'Learned today' : 'Nothing yet'}
+          </p>
+        </div>
+      </div>
+    </section>
   )
 }

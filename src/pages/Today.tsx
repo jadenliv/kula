@@ -2,6 +2,7 @@ import { useZmanim } from '../hooks/useZmanim'
 import { useDailyLearning } from '../hooks/useDailyLearning'
 import { useLocation } from '../context/LocationContext'
 import { useProfile } from '../context/ProfileContext'
+import { useStreak } from '../hooks/useStreak'
 import { Spinner } from '../components/ui/Spinner'
 import { type ZmanimTimes, type HebCalEvent } from '../services/hebcal'
 import { LocationPicker } from '../components/zemanim/LocationPicker'
@@ -104,6 +105,7 @@ export default function Today() {
   const { profile } = useProfile()
   const { data: zmanimData, isLoading: zmanimLoading } = useZmanim()
   const { data: learningData, isLoading: learningLoading } = useDailyLearning()
+  const streak = useStreak()
   const [locationPickerOpen, setLocationPickerOpen] = useState(false)
 
   // Filter cycles by user preference. null/empty = show all six (fallback).
@@ -126,9 +128,30 @@ export default function Today() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-serif text-2xl tracking-tight text-kula-900 dark:text-kula-50 md:text-3xl">
-            Today
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-serif text-2xl tracking-tight text-kula-900 dark:text-kula-50 md:text-3xl">
+              Today
+            </h2>
+            {/* Streak badge — only shown once data loads and streak > 0 */}
+            {!streak.isLoading && streak.current > 0 && (
+              <span
+                title={`${streak.current}-day streak${streak.longest > streak.current ? ` · best: ${streak.longest} days` : ''}`}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold transition-colors ${
+                  streak.learnedToday
+                    ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-400/10 dark:text-orange-400'
+                    : 'bg-kula-500/8 text-kula-500 dark:bg-kula-400/8 dark:text-kula-400'
+                }`}
+              >
+                🔥 {streak.current}
+              </span>
+            )}
+            {/* Nudge when no streak yet and data is loaded */}
+            {!streak.isLoading && streak.current === 0 && (
+              <span className="text-xs text-kula-400 dark:text-kula-600">
+                Start a streak — learn something today
+              </span>
+            )}
+          </div>
           {/* Short date on mobile, full date on desktop */}
           <p className="mt-0.5 text-sm text-kula-600 dark:text-kula-400 md:hidden">
             {formatGregorianDate(true)}
