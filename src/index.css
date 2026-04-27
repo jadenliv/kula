@@ -58,11 +58,73 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--app-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar               { width: 5px; height: 5px; }
+::-webkit-scrollbar-track         { background: transparent; }
+::-webkit-scrollbar-thumb         { background: var(--border); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover   { background: var(--color-kula-400); }
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+
+/* Page slide-up entrance — re-triggers on every route mount */
+@keyframes kula-page-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);     }
+}
+.page-animate {
+  animation: kula-page-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Fade-in used for panels, modals, expanded sections */
+@keyframes kula-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.animate-fade-in {
+  animation: kula-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Staggered grid children — assign delay by nth-child */
+@keyframes kula-card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.stagger-grid > * {
+  animation: kula-card-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-grid > *:nth-child(1)  { animation-delay:  0ms; }
+.stagger-grid > *:nth-child(2)  { animation-delay: 40ms; }
+.stagger-grid > *:nth-child(3)  { animation-delay: 70ms; }
+.stagger-grid > *:nth-child(4)  { animation-delay: 95ms; }
+.stagger-grid > *:nth-child(5)  { animation-delay:115ms; }
+.stagger-grid > *:nth-child(6)  { animation-delay:130ms; }
+.stagger-grid > *:nth-child(n+7){ animation-delay:145ms; }
+
+/* Card hover lift — applied to interactive card-like elements */
+.card-interactive {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+}
+.dark .card-interactive:hover {
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45);
+}
+.card-interactive:active {
+  transform: translateY(0);
+  transition-duration: 0.08s;
 }
 
 /* Prevent iOS Safari from auto-zooming when an input receives focus.

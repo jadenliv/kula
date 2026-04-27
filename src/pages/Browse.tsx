@@ -45,7 +45,7 @@ function CategoryCard({
     <button
       type="button"
       onClick={onClick}
-      className={`group flex flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${
+      className={`card-interactive group flex flex-col gap-2 rounded-xl border p-4 text-left ${
         isSelected
           ? 'border-kula-400/60 bg-kula-400/5 dark:border-kula-400/50 dark:bg-kula-400/5'
           : 'border-[var(--border)] bg-[var(--surface)] hover:border-kula-300 hover:bg-[var(--surface-raised)] dark:hover:border-kula-600'
@@ -117,7 +117,7 @@ export default function Browse() {
       </div>
 
       {/* Category cards grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="stagger-grid grid grid-cols-2 gap-3 sm:grid-cols-3">
         {TOP_LEVEL.map((node, i) => (
           <CategoryCard
             key={node.english ?? i}
@@ -131,7 +131,7 @@ export default function Browse() {
 
       {/* Expanded category tree */}
       {selectedNode && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 md:p-4">
+        <div className="animate-fade-in rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 md:p-4">
           {/* Section heading */}
           <div className="mb-3 flex items-baseline gap-2">
             <h3 className="font-serif text-lg font-medium tracking-tight text-kula-900 dark:text-kula-100">

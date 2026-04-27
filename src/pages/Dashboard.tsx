@@ -723,7 +723,7 @@ function RecentNotesSection() {
 
 function StatTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="card-interactive rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-kula-400 dark:text-kula-500">
         {label}
       </p>
@@ -957,7 +957,7 @@ function StreakSection() {
         </div>
 
         {/* Longest streak */}
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="card-interactive rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="font-serif text-2xl font-medium text-kula-800 dark:text-kula-200">
             {streak.longest > 0 ? streak.longest : '—'}
           </p>
@@ -970,7 +970,7 @@ function StreakSection() {
         </div>
 
         {/* Today's status */}
-        <div className="hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:block">
+        <div className="card-interactive hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:block">
           <p className="font-serif text-2xl font-medium text-kula-800 dark:text-kula-200">
             {streak.learnedToday ? '✓' : '—'}
           </p>

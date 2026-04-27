@@ -220,7 +220,7 @@ export default function Today() {
               return (
                 <div
                   key={key}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-colors md:px-4 md:py-2.5 ${
+                  className={`card-interactive flex items-center justify-between rounded-xl border px-3 py-2 md:px-4 md:py-2.5 ${
                     isNext
                       ? 'border-kula-400/40 bg-kula-400/5 dark:border-kula-400/40 dark:bg-kula-400/5'
                       : 'border-[var(--border)] bg-[var(--surface-raised)]/60'
@@ -270,14 +270,14 @@ export default function Today() {
         )}
 
         {!learningLoading && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stagger-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {LEARNING_SCHEDULES.filter(({ titleEn }) =>
               activeCycleIds === null || activeCycleIds.has(titleEn)
             ).map(({ titleEn, label, hebrew }) => {
               const item = learningByTitle.get(titleEn)
               const sefariaLink = item ? `https://www.sefaria.org/${item.url}?lang=bi` : null
               return (
-                <div key={titleEn} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+                <div key={titleEn} className="card-interactive rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
                   <p className="mb-0.5 text-xs font-semibold uppercase tracking-wider text-kula-500 dark:text-kula-400">
                     {label}
                   </p>

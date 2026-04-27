@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
@@ -17,6 +17,7 @@ function getInitialDark(): boolean {
 
 export function AppShell() {
   const [isDark, setIsDark] = useState<boolean>(getInitialDark)
+  const { pathname } = useLocation()
   // Activate Supabase Realtime subscription so the notification bell updates live.
   useNotificationSubscription()
 
@@ -40,7 +41,10 @@ export function AppShell() {
         <Sidebar />
         {/* pb-20 on mobile reserves space above the bottom nav */}
         <main className="flex-1 px-4 py-5 pb-24 md:px-6 md:py-6 md:pb-6">
-          <Outlet />
+          {/* key=pathname forces a remount on every navigation, re-triggering the animation */}
+          <div key={pathname} className="page-animate">
+            <Outlet />
+          </div>
         </main>
       </div>
       {/* Mobile-only bottom navigation */}
