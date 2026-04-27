@@ -72,22 +72,30 @@ export function Sidebar() {
 
   return (
     <aside className="hidden w-52 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] transition-colors duration-200 md:flex md:flex-col">
-      <nav className="flex flex-col gap-1 p-3 pt-4">
+      <nav className="flex flex-col gap-0.5 p-3 pt-4">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+              `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
                 isActive
-                  ? 'bg-kula-600/10 text-kula-700 dark:bg-kula-400/10 dark:text-kula-300'
-                  : 'text-kula-500 hover:bg-[var(--surface-raised)] hover:text-kula-800 dark:text-kula-500 dark:hover:bg-[var(--surface-raised)] dark:hover:text-kula-200'
+                  ? 'bg-kula-500/10 text-kula-700 dark:bg-kula-400/12 dark:text-kula-100'
+                  : 'text-kula-500 hover:bg-[var(--surface-raised)] hover:text-kula-800 dark:text-kula-400 dark:hover:bg-[var(--surface-raised)] dark:hover:text-kula-200'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <span className={`transition-colors ${isActive ? 'text-kula-600 dark:text-kula-400' : 'text-kula-400 group-hover:text-kula-600 dark:text-kula-600 dark:group-hover:text-kula-300'}`}>
+                {/* Left accent bar for active item */}
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-kula-500 dark:bg-kula-400" />
+                )}
+                <span className={`transition-colors ${
+                  isActive
+                    ? 'text-kula-600 dark:text-kula-300'
+                    : 'text-kula-400 group-hover:text-kula-600 dark:text-kula-500 dark:group-hover:text-kula-300'
+                }`}>
                   {item.icon(isActive)}
                 </span>
                 <span className="flex-1">{item.label}</span>
@@ -96,9 +104,6 @@ export function Sidebar() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-kula-400 opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-kula-500 dark:bg-kula-400" />
                   </span>
-                )}
-                {!(item.to === '/dashboard' && activeSession) && isActive && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-kula-500 dark:bg-kula-400" />
                 )}
               </>
             )}
@@ -115,10 +120,10 @@ export function Sidebar() {
           >
             <Avatar profile={profile} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium text-kula-700 dark:text-kula-300">
+              <p className="truncate text-xs font-medium text-kula-800 dark:text-kula-200">
                 {profile.display_name || profile.username}
               </p>
-              <p className="truncate text-[10px] text-kula-400 dark:text-kula-600">
+              <p className="truncate text-[10px] text-kula-500 dark:text-kula-400">
                 @{profile.username}
               </p>
             </div>

@@ -66,8 +66,8 @@ export function BottomNav() {
           className={({ isActive }) =>
             `flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors ${
               isActive
-                ? 'text-kula-600 dark:text-kula-300'
-                : 'text-kula-400 dark:text-kula-500'
+                ? 'text-kula-600 dark:text-kula-200'
+                : 'text-kula-400 dark:text-kula-400'
             }`
           }
         >

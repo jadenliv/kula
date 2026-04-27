@@ -8,19 +8,23 @@
 /* Heebo: clean modern sans-serif designed for Hebrew, great glyph coverage   */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&family=DM+Serif+Display:ital@0;1&family=Heebo:wght@300;400;500;600;700&display=swap');
 
-/* ── Brand palette — deep navy → sky blue (from logo gradient) ───────────── */
+/* ── Brand palette ────────────────────────────────────────────────────────── */
+/*  Slate-indigo scale. Designed for legibility first:                         */
+/*    Light mode: rich dark text on clean white.                               */
+/*    Dark mode:  near-white / light-blue text on near-black surfaces.         */
+/*  Every "muted" text step is ≥ 4.5:1 contrast on its background.            */
 @theme {
-  --color-kula-50:  #e8f4fb;
-  --color-kula-100: #c5e3f2;
-  --color-kula-200: #9ecfe8;
-  --color-kula-300: #6bb8d4;
-  --color-kula-400: #4a9fd4;
-  --color-kula-500: #3d85c0;
-  --color-kula-600: #2d6fa8;
-  --color-kula-700: #1d3461;
-  --color-kula-800: #152750;
-  --color-kula-900: #0f1e3a;
-  --color-kula-950: #0a1525;
+  --color-kula-50:  #f4f7ff;   /* near-white, cool hint — primary text in dark   */
+  --color-kula-100: #e8eeff;
+  --color-kula-200: #d0dcff;
+  --color-kula-300: #a8bef5;   /* secondary text in dark — ~8 : 1 on app-bg     */
+  --color-kula-400: #7598e0;   /* muted text in dark    — ~5 : 1 on app-bg     */
+  --color-kula-500: #4e72c4;   /* primary accent                                */
+  --color-kula-600: #3358a8;   /* darker accent / secondary text in light       */
+  --color-kula-700: #1e3d80;
+  --color-kula-800: #122460;
+  --color-kula-900: #0c1640;   /* primary text in light — ~17 : 1 on app-bg    */
+  --color-kula-950: #07101e;   /* darkest dark — used as app-bg in dark mode    */
 
   /* Sans: Inter for all UI text */
   --font-sans:   'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -32,21 +36,21 @@
 
 /* ── Semantic surface tokens — flip on .dark ──────────────────────────────── */
 :root {
-  --app-bg:          #f4f7fc;
+  --app-bg:          #f4f7ff;   /* slightly cool white  */
   --surface:         #ffffff;
-  --surface-raised:  #edf2fb;
-  --surface-overlay: #e2ecf8;
-  --border:          #ccd6ee;
-  --border-subtle:   #e4eaf8;
+  --surface-raised:  #eef2ff;
+  --surface-overlay: #e6ecff;
+  --border:          #d8e0f8;
+  --border-subtle:   #eaeefc;
 }
 
 .dark {
-  --app-bg:          #0a1525;
-  --surface:         #0f1e32;
-  --surface-raised:  #142438;
-  --surface-overlay: #1a2d45;
-  --border:          #1c3050;
-  --border-subtle:   #122030;
+  --app-bg:          #07101e;   /* near-black — max contrast base               */
+  --surface:         #0d1830;   /* cards, panels                                */
+  --surface-raised:  #122038;   /* hover states, nested surfaces                */
+  --surface-overlay: #182a48;   /* modals, dropdowns                            */
+  --border:          #1e3052;   /* visible borders                              */
+  --border-subtle:   #111e38;   /* dividers, subtle separators                  */
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
