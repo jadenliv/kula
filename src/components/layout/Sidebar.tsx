@@ -64,6 +64,16 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    to: '/sources',
+    label: 'Sources',
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <circle cx="8.5" cy="8.5" r="5.5" />
+        <path d="M17 17l-4-4" />
+      </svg>
+    ),
+  },
 ]
 
 export function Sidebar() {

@@ -27,6 +27,7 @@ import AdminReports from './pages/admin/Reports'
 import AdminPosts from './pages/admin/Posts'
 import AdminStatus from './pages/admin/Status'
 import AdminUsers from './pages/admin/Users'
+import Sources from './pages/Sources'
 import Feed from './pages/Feed'
 import Discover from './pages/Discover'
 import Landing from './pages/Landing'
@@ -112,6 +113,7 @@ function App() {
                       <Route path="/browse" element={<Browse />} />
                       <Route path="/read/:ref" element={<Reader />} />
                       <Route path="/notebook" element={<Notebook />} />
+                      <Route path="/sources" element={<Sources />} />
 
                       {/* Feed — gets its own error boundary: social feed is high-traffic */}
                       <Route
