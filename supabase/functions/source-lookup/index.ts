@@ -184,7 +184,11 @@ async function askClaude(query: string): Promise<ClaudeResult | null> {
   }
 
   const data = await res.json();
-  const text: string = data.content?.[0]?.text ?? "";
+  const raw: string = data.content?.[0]?.text ?? "";
+
+  // Strip markdown code fences Claude occasionally wraps around JSON
+  // e.g. ```json\n{...}\n``` → {...}
+  const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
   try {
     const parsed = JSON.parse(text) as ClaudeResult;
