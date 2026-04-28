@@ -1,16 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   adminDeletePost,
+  addComment,
   createPost,
+  deleteComment,
   deletePost,
+  getLikeStatus,
   getPost,
+  likePost,
   listAllPostsAdmin,
+  listComments,
   listOwnPosts,
   listPostsForUser,
+  unlikePost,
   updatePost,
   type AdminPost,
   type CreatePostInput,
   type Post,
+  type PostComment,
   type UpdatePostInput,
 } from '../services/posts'
 import { useAuth } from '../context/AuthContext'
@@ -109,6 +116,67 @@ export function useDeletePost() {
     mutationFn: ({ id }: { id: string }) => deletePost(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: POSTS_KEY })
+    },
+  })
+}
+
+// ── Like hooks ────────────────────────────────────────────────────────────────
+
+const likeStatusKey = (postId: string) => ['posts', postId, 'likes'] as const
+
+/** Fresh like count + liked state, used on the PostPage. */
+export function useLikeStatus(postId: string | undefined) {
+  return useQuery({
+    queryKey: likeStatusKey(postId ?? ''),
+    queryFn: () => getLikeStatus(postId!),
+    enabled: Boolean(postId),
+    staleTime: 1000 * 30,
+  })
+}
+
+export function useLike(postId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ currentlyLiked }: { currentlyLiked: boolean }) =>
+      currentlyLiked ? unlikePost(postId) : likePost(postId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: likeStatusKey(postId) })
+    },
+  })
+}
+
+// ── Comment hooks ─────────────────────────────────────────────────────────────
+
+const commentsKey = (postId: string) => ['posts', postId, 'comments'] as const
+
+export function useComments(postId: string | undefined) {
+  return useQuery<PostComment[]>({
+    queryKey: commentsKey(postId ?? ''),
+    queryFn: () => listComments(postId!),
+    enabled: Boolean(postId),
+    staleTime: 1000 * 30,
+  })
+}
+
+export function useAddComment(postId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (body: string) => addComment(postId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: commentsKey(postId) })
+    },
+  })
+}
+
+export function useDeleteComment(postId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deleteComment(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: commentsKey(postId) })
     },
   })
 }

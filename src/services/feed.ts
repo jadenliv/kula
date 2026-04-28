@@ -24,6 +24,16 @@ export type FeedItemNote = {
   date: string
 }
 
+/**
+ * Engagement counts for a post in the feed.
+ * Fetched in a single batch after the main post query to avoid N+1.
+ */
+export type PostEngagement = {
+  likeCount: number
+  commentCount: number
+  likedByCurrentUser: boolean
+}
+
 export type FeedItemPost = {
   type: 'post'
   id: string
@@ -36,6 +46,7 @@ export type FeedItemPost = {
     privacy: string
     created_at: string
   }
+  engagement: PostEngagement
   date: string
 }
 
@@ -69,24 +80,28 @@ export async function getFeedItems(): Promise<FeedResult> {
     .eq('status', 'accepted')
 
   const followedIds = follows?.map((f) => f.followed_user_id) ?? []
-  if (!followedIds.length) return { items: [], hasFollows: false }
+  const hasFollows = followedIds.length > 0
+
+  // Always include the current user's own non-private content in the feed
+  // so they can see their own posts alongside the people they follow.
+  const feedIds = [...new Set([user.id, ...followedIds])]
 
   const since = new Date(Date.now() - FEED_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
   // Fetch profiles, notes, and posts in parallel.
   // Completions are deliberately excluded — learning progress is private.
-  // RLS on each table controls what rows are returned; we filter by followedIds
-  // to scope results to people this user follows.
+  // RLS on each table controls what rows are returned; we filter by feedIds
+  // to scope results to the user and the people they follow.
   const [profilesRes, notesRes, postsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, username, display_name')
-      .in('id', followedIds),
+      .in('id', feedIds),
 
     supabase
       .from('notes')
       .select('id, user_id, sefaria_ref, body, tags, privacy, created_at')
-      .in('user_id', followedIds)
+      .in('user_id', feedIds)
       .neq('privacy', 'private')
       .gte('created_at', since)
       .order('created_at', { ascending: false }),
@@ -94,7 +109,7 @@ export async function getFeedItems(): Promise<FeedResult> {
     supabase
       .from('posts')
       .select('id, user_id, title, body, privacy, created_at')
-      .in('user_id', followedIds)
+      .in('user_id', feedIds)
       .neq('privacy', 'private')
       .is('deleted_at', null)
       .gte('created_at', since)
@@ -104,6 +119,34 @@ export async function getFeedItems(): Promise<FeedResult> {
   const profileMap = new Map(
     (profilesRes.data ?? []).map((p) => [p.id, p as FeedProfile]),
   )
+
+  // ── Batch-fetch engagement (likes + comments) for all posts ───────────────
+  // This avoids N+1 queries — one fetch per resource type across all post IDs.
+  const postIds = (postsRes.data ?? []).map((p) => p.id)
+
+  const likeCountMap = new Map<string, number>()
+  const commentCountMap = new Map<string, number>()
+  const likedByUserSet = new Set<string>()
+
+  if (postIds.length > 0) {
+    const [likesRes, commentsRes, myLikesRes] = await Promise.all([
+      supabase.from('post_likes').select('post_id').in('post_id', postIds),
+      supabase.from('post_comments').select('post_id').in('post_id', postIds).is('deleted_at', null),
+      supabase.from('post_likes').select('post_id').in('post_id', postIds).eq('user_id', user.id),
+    ])
+
+    for (const l of likesRes.data ?? []) {
+      likeCountMap.set(l.post_id, (likeCountMap.get(l.post_id) ?? 0) + 1)
+    }
+    for (const c of commentsRes.data ?? []) {
+      commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) ?? 0) + 1)
+    }
+    for (const l of myLikesRes.data ?? []) {
+      likedByUserSet.add(l.post_id)
+    }
+  }
+
+  // ── Build typed feed items ────────────────────────────────────────────────
 
   const noteItems: FeedItemNote[] = (notesRes.data ?? [])
     .map((n) => {
@@ -128,6 +171,11 @@ export async function getFeedItems(): Promise<FeedResult> {
         id: p.id,
         profile,
         post: p,
+        engagement: {
+          likeCount: likeCountMap.get(p.id) ?? 0,
+          commentCount: commentCountMap.get(p.id) ?? 0,
+          likedByCurrentUser: likedByUserSet.has(p.id),
+        },
         date: p.created_at,
       }
     })
@@ -137,5 +185,5 @@ export async function getFeedItems(): Promise<FeedResult> {
     b.date.localeCompare(a.date),
   )
 
-  return { items: allItems, hasFollows: true }
+  return { items: allItems, hasFollows }
 }

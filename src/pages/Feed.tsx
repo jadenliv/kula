@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useFeed } from '../hooks/useFeed'
+import { useAuth } from '../context/AuthContext'
 import { Avatar } from '../components/ui/Avatar'
 import { Spinner } from '../components/ui/Spinner'
 import { ReportButton } from '../components/profile/ReportButton'
 import { PrivacyIcon } from '../components/notes/NotesPanel'
 import { PostPrivacyIcon } from '../components/posts/PostCard'
+import { likePost, unlikePost } from '../services/posts'
 import type { FeedItem, FeedItemNote, FeedItemPost, FeedProfile } from '../services/feed'
 import type { NotePrivacy } from '../services/notes'
 
@@ -18,8 +20,8 @@ export default function Feed() {
 
   const result = data ?? { items: [], hasFollows: false }
 
-  // ── Empty state: no follows at all ────────────────────────────────────────
-  if (!result.hasFollows) {
+  // ── Empty state: no follows and no own content ────────────────────────────
+  if (!result.hasFollows && result.items.length === 0) {
     return (
       <div className="mx-auto max-w-lg">
         <FeedHeader />
@@ -172,11 +174,35 @@ function NoteItem({ item }: { item: FeedItemNote }) {
 const POST_PREVIEW_LENGTH = 300
 
 function PostItem({ item }: { item: FeedItemPost }) {
-  const { post, profile } = item
+  const { user } = useAuth()
+  const { post, profile, engagement } = item
   const name = profile.display_name || profile.username
   const preview = post.body.length > POST_PREVIEW_LENGTH
     ? post.body.slice(0, POST_PREVIEW_LENGTH) + '…'
     : post.body
+
+  // Local optimistic like state — initialised from the feed query engagement data
+  const [liked, setLiked] = useState(engagement.likedByCurrentUser)
+  const [likeCount, setLikeCount] = useState(engagement.likeCount)
+  const [liking, setLiking] = useState(false)
+
+  async function handleLike() {
+    if (!user || liking) return
+    const wasLiked = liked
+    setLiking(true)
+    setLiked(!wasLiked)
+    setLikeCount(wasLiked ? likeCount - 1 : likeCount + 1)
+    try {
+      if (wasLiked) await unlikePost(post.id)
+      else await likePost(post.id)
+    } catch {
+      // Revert on error
+      setLiked(wasLiked)
+      setLikeCount(likeCount)
+    } finally {
+      setLiking(false)
+    }
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
@@ -219,6 +245,39 @@ function PostItem({ item }: { item: FeedItemPost }) {
           </span>
         )}
       </Link>
+
+      {/* Engagement bar */}
+      <div className="flex items-center gap-4 border-t border-[var(--border)] px-4 py-2">
+        {/* Like button */}
+        <button
+          type="button"
+          onClick={handleLike}
+          disabled={!user || liking}
+          className={`flex items-center gap-1.5 text-xs transition-colors disabled:opacity-40 ${
+            liked
+              ? 'text-kula-500 dark:text-kula-400'
+              : 'text-kula-400 hover:text-kula-600 dark:text-kula-600 dark:hover:text-kula-400'
+          }`}
+          title={liked ? 'Unlike' : 'Like'}
+        >
+          <svg viewBox="0 0 20 20" className="h-4 w-4" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 17C10 17 2.5 12 2.5 7.5C2.5 5.01 4.51 3 7 3C8.37 3 9.6 3.67 10 4.5C10.4 3.67 11.63 3 13 3C15.49 3 17.5 5.01 17.5 7.5C17.5 12 10 17 10 17Z" />
+          </svg>
+          {likeCount > 0 && <span>{likeCount}</span>}
+        </button>
+
+        {/* Comment count — links to full post */}
+        <Link
+          to={`/posts/${post.id}`}
+          className="flex items-center gap-1.5 text-xs text-kula-400 transition-colors hover:text-kula-600 dark:text-kula-600 dark:hover:text-kula-400"
+          title="Comments"
+        >
+          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 4h12a1 1 0 011 1v7a1 1 0 01-1 1H7l-3 3V5a1 1 0 011-1z" />
+          </svg>
+          {engagement.commentCount > 0 && <span>{engagement.commentCount}</span>}
+        </Link>
+      </div>
     </div>
   )
 }
@@ -245,4 +304,3 @@ function timeAgo(iso: string): string {
   const days = Math.floor(hours / 24)
   return `${days}d ago`
 }
-

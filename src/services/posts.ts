@@ -206,3 +206,124 @@ export async function listAllPostsAdmin(): Promise<AdminPost[]> {
     author_display_name: profileMap.get(p.user_id)?.display_name,
   }))
 }
+
+// ── Likes ─────────────────────────────────────────────────────────────────────
+
+export async function likePost(postId: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not signed in')
+
+  const { error } = await supabase
+    .from('post_likes')
+    .insert({ post_id: postId, user_id: user.id })
+  if (error) throw new Error(error.message)
+}
+
+export async function unlikePost(postId: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not signed in')
+
+  const { error } = await supabase
+    .from('post_likes')
+    .delete()
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+  if (error) throw new Error(error.message)
+}
+
+/** Fresh like count + whether the current user has liked, for the post page. */
+export async function getLikeStatus(
+  postId: string,
+): Promise<{ likeCount: number; liked: boolean }> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const [allRes, myRes] = await Promise.all([
+    supabase.from('post_likes').select('id').eq('post_id', postId),
+    user
+      ? supabase
+          .from('post_likes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+  ])
+
+  return {
+    likeCount: allRes.data?.length ?? 0,
+    liked: (myRes.data?.length ?? 0) > 0,
+  }
+}
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+export type PostComment = {
+  id: string
+  post_id: string
+  user_id: string
+  body: string
+  created_at: string
+  profile: { username: string; display_name: string } | null
+}
+
+/** All non-deleted comments for a post, oldest first. */
+export async function listComments(postId: string): Promise<PostComment[]> {
+  const { data, error } = await supabase
+    .from('post_comments')
+    .select('id, post_id, user_id, body, created_at')
+    .eq('post_id', postId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  if (!data?.length) return []
+
+  // Manually join profiles (post_comments.user_id → auth.users.id = profiles.id)
+  const userIds = [...new Set(data.map((c) => c.user_id))]
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, username, display_name')
+    .in('id', userIds)
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]))
+
+  return data.map((c) => ({
+    ...c,
+    profile: profileMap.get(c.user_id) ?? null,
+  }))
+}
+
+export async function addComment(postId: string, body: string): Promise<PostComment> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not signed in')
+
+  const { data, error } = await supabase
+    .from('post_comments')
+    .insert({ post_id: postId, user_id: user.id, body: body.trim() })
+    .select('id, post_id, user_id, body, created_at')
+    .single()
+  if (error) throw new Error(error.message)
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, display_name')
+    .eq('id', user.id)
+    .single()
+
+  return { ...data, profile: profile ?? null }
+}
+
+/** Soft-delete: sets deleted_at so the comment disappears but data is preserved. */
+export async function deleteComment(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('post_comments')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
