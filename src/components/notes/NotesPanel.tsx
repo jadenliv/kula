@@ -235,6 +235,7 @@ export function NotesPanel({ refId, title, open, onClose }: Props) {
   const [draft, setDraft] = useState('')
   const [draftTags, setDraftTags] = useState<string[]>([])
   const [draftPrivacy, setDraftPrivacy] = useState<NotePrivacy>(defaultPrivacy)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   // Re-sync default when profile loads (may not be ready on first render)
@@ -263,7 +264,7 @@ export function NotesPanel({ refId, title, open, onClose }: Props) {
   const handleSubmit = () => {
     const body = draft.trim()
     if (!body) return
-    // Capture privacy before clearing draft state for use in the callback.
+    setSaveError(null)
     const privacyAtSubmit = draftPrivacy
     addNote.mutate(
       { ref: refId, body, tags: draftTags, privacy: draftPrivacy },
@@ -272,8 +273,13 @@ export function NotesPanel({ refId, title, open, onClose }: Props) {
           setDraft('')
           setDraftTags([])
           setDraftPrivacy(defaultPrivacy)
-          // Track: note saved. privacy_level is behavioral signal, not PII.
+          setSaveError(null)
           track('note_created', { privacy_level: privacyAtSubmit })
+        },
+        onError: (err) => {
+          setSaveError(
+            err instanceof Error ? err.message : 'Failed to save note. Please try again.',
+          )
         },
       },
     )
@@ -343,6 +349,11 @@ export function NotesPanel({ refId, title, open, onClose }: Props) {
           />
           <TagInput tags={draftTags} onChange={setDraftTags} allTags={allTags} />
           <PrivacySelector value={draftPrivacy} onChange={setDraftPrivacy} profileIsPrivate={profileIsPrivate} />
+          {saveError && (
+            <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-900/40 dark:bg-red-900/10 dark:text-red-400">
+              {saveError}
+            </p>
+          )}
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-xs text-kula-400">⌘/Ctrl + Enter to save</span>
             <button type="button" onClick={handleSubmit} disabled={!draft.trim() || addNote.isPending}
