@@ -13,6 +13,8 @@ import { Spinner } from '../ui/Spinner'
 
 type Props = {
   refId: string
+  /** Human-readable title to show in the panel header instead of the raw refId. */
+  title?: string
   open: boolean
   onClose: () => void
 }
@@ -214,7 +216,7 @@ export function TagPills({ tags }: { tags: string[] }) {
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export function NotesPanel({ refId, open, onClose }: Props) {
+export function NotesPanel({ refId, title, open, onClose }: Props) {
   const notes = useNotesForRef(refId)
   const { data: allNotes = [] } = useNotes()
   const addNote = useAddNote()
@@ -304,9 +306,11 @@ export function NotesPanel({ refId, open, onClose }: Props) {
         }`}
       >
         <header className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-widest text-kula-500">Notes on</p>
-            <h3 className="font-serif text-lg text-kula-900 dark:text-kula-50">{refId}</h3>
+            <h3 className="truncate font-serif text-lg text-kula-900 dark:text-kula-50">
+              {title ?? refId}
+            </h3>
           </div>
           <button type="button" onClick={onClose} aria-label="Close notes"
             className="rounded-lg p-2 text-kula-400 transition-colors hover:bg-[var(--surface-raised)] hover:text-kula-700 dark:hover:text-kula-200">

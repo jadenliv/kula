@@ -164,15 +164,15 @@ export async function deleteCustomSection(id: string): Promise<void> {
 
 // ── Ref helpers ───────────────────────────────────────────────────────────────
 //
-// Custom sefarim reuse the same `completions` table as built-in sefarim.
+// Custom sefarim reuse the same `completions` and `notes` tables as built-in sefarim.
 // We prefix refs with "custom:" so they never collide with Sefaria refs.
 
-/** Completion ref for a flat-structure chapter (1-based). */
+/** Completion/note ref for a flat-structure chapter (1-based). */
 export function flatRef(seferId: string, chapterNum: number): string {
   return `custom:${seferId}:${chapterNum}`
 }
 
-/** Completion ref for a nested-structure leaf section. */
+/** Completion/note ref for a nested-structure leaf section. */
 export function nestedRef(seferId: string, sectionId: string): string {
   return `custom:${seferId}:${sectionId}`
 }
@@ -180,4 +180,21 @@ export function nestedRef(seferId: string, sectionId: string): string {
 /** All refs for a flat sefer, in order. */
 export function allFlatRefs(seferId: string, chapterCount: number): string[] {
   return Array.from({ length: chapterCount }, (_, i) => flatRef(seferId, i + 1))
+}
+
+/**
+ * Parse a custom ref back into its parts.
+ * Returns null if the string is not a valid custom ref.
+ */
+export function parseCustomRef(ref: string): { seferId: string; key: string } | null {
+  if (!ref.startsWith('custom:')) return null
+  // Format is "custom:{seferId}:{key}" where seferId is a UUID (contains hyphens, no colons)
+  // We split on the first two colons only.
+  const firstColon = ref.indexOf(':')
+  const secondColon = ref.indexOf(':', firstColon + 1)
+  if (firstColon === -1 || secondColon === -1) return null
+  const seferId = ref.slice(firstColon + 1, secondColon)
+  const key = ref.slice(secondColon + 1)
+  if (!seferId || !key) return null
+  return { seferId, key }
 }

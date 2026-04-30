@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
 import { useNotesForRef } from '../hooks/useNotes'
+import { useCustomRefLabel, useCustomRefSefer } from '../hooks/useCustomSefarim'
 import { sefariaUrl } from '../data/catalog'
 import { NotesPanel } from '../components/notes/NotesPanel'
 
@@ -14,21 +15,41 @@ import { NotesPanel } from '../components/notes/NotesPanel'
  *      (e.g. clicking a note on the Notebook page or the ✎ shortcut in the
  *      catalog tree).
  *   2. Users can open the text in Sefaria's bilingual view in one click.
+ *
+ * Custom sefer refs (prefixed "custom:") are handled specially:
+ *   - A human-readable title is shown instead of the raw UUID-based ref.
+ *   - The Sefaria link is omitted unless the sefer has a `sefaria_title` set.
  */
 export default function Reader() {
   const { ref } = useParams<{ ref: string }>()
   const decodedRef = ref ? decodeURIComponent(ref) : null
+  const isCustomRef = Boolean(decodedRef?.startsWith('custom:'))
 
   const notes = useNotesForRef(decodedRef)
   const [searchParams, setSearchParams] = useSearchParams()
   const [panelOpen, setPanelOpen] = useState(false)
 
+  // Human-readable label for custom sefer refs (null for regular Sefaria refs)
+  const customLabel = useCustomRefLabel(isCustomRef ? decodedRef : null)
+  const customSefer = useCustomRefSefer(isCustomRef ? decodedRef : null)
+
+  // Title shown in the page heading
+  const displayTitle = isCustomRef
+    ? (customLabel ?? decodedRef ?? '…')
+    : (decodedRef ?? '…')
+
+  // Sefaria href:
+  //   regular ref → link to that ref
+  //   custom ref with sefaria_title → link to the sefer root on Sefaria
+  //   custom ref without sefaria_title → no link (hide button)
+  const sefariaHref = isCustomRef
+    ? (customSefer?.sefaria_ref ? sefariaUrl(customSefer.sefaria_ref) : null)
+    : (decodedRef ? sefariaUrl(decodedRef) : null)
+
   // Auto-open the notes panel when arriving via /read/:ref?notes=open
-  // (e.g. clicking a note on the Notebook page).
   useEffect(() => {
     if (searchParams.get('notes') === 'open') {
       setPanelOpen(true)
-      // Strip the param so the panel state isn't re-applied on every nav.
       const next = new URLSearchParams(searchParams)
       next.delete('notes')
       setSearchParams(next, { replace: true })
@@ -48,14 +69,14 @@ export default function Reader() {
       {/* Title + actions */}
       <div className="space-y-4">
         <h2 className="font-serif text-3xl tracking-tight text-kula-900 dark:text-kula-50">
-          {decodedRef ?? '…'}
+          {displayTitle}
         </h2>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Open bilingual text in Sefaria */}
-          {decodedRef && (
+          {/* Open in Sefaria — only when a valid Sefaria URL exists */}
+          {sefariaHref && (
             <a
-              href={sefariaUrl(decodedRef)}
+              href={sefariaHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-kula-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-kula-800 dark:bg-kula-400 dark:text-kula-950 dark:hover:bg-kula-300"
@@ -95,19 +116,26 @@ export default function Reader() {
 
       {/* Hint text */}
       <p className="text-sm text-kula-500 dark:text-kula-400">
-        Click{' '}
-        <span className="font-medium text-kula-700 dark:text-kula-300">
-          Open in Sefaria
-        </span>{' '}
-        to read the full bilingual text, or use the Notes button to record your
-        thoughts here.
+        {isCustomRef
+          ? 'Use the Notes button to record your thoughts on this section.'
+          : (
+            <>
+              Click{' '}
+              <span className="font-medium text-kula-700 dark:text-kula-300">
+                Open in Sefaria
+              </span>{' '}
+              to read the full bilingual text, or use the Notes button to record your thoughts here.
+            </>
+          )
+        }
       </p>
 
-      {/* Notes panel — wrapped in its own error boundary; it's the note editor */}
+      {/* Notes panel */}
       {decodedRef && (
         <Sentry.ErrorBoundary fallback={<></>}>
           <NotesPanel
             refId={decodedRef}
+            title={isCustomRef ? (customLabel ?? undefined) : undefined}
             open={panelOpen}
             onClose={() => setPanelOpen(false)}
           />

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   listCustomSefarim,
@@ -7,6 +8,7 @@ import {
   deleteCustomSefer,
   createCustomSection,
   deleteCustomSection,
+  parseCustomRef,
   type UserCustomSefer,
 } from '../services/customSefarim'
 import { useAuth } from '../context/AuthContext'
@@ -93,6 +95,50 @@ export function useCreateCustomSection(seferId: string) {
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: customSectionsKey(seferId) }),
   })
+}
+
+// ── Custom ref label helpers ──────────────────────────────────────────────────
+
+/**
+ * Given a raw custom ref string (e.g. "custom:{uuid}:3"), returns the sefer
+ * it belongs to, or null if it's not a custom ref or the sefer hasn't loaded.
+ */
+export function useCustomRefSefer(ref: string | null): UserCustomSefer | null {
+  const { data: sefarim = [] } = useCustomSefarim()
+  return useMemo(() => {
+    if (!ref) return null
+    const parsed = parseCustomRef(ref)
+    if (!parsed) return null
+    return sefarim.find((s) => s.id === parsed.seferId) ?? null
+  }, [ref, sefarim])
+}
+
+/**
+ * Converts a raw custom ref into a human-readable label, e.g.:
+ *   flat:   "custom:{uuid}:3"  →  "Mesilat Yesharim · Perek 3"
+ *   nested: "custom:{uuid}:{sectionId}" → "My Sefer · Introduction"
+ *
+ * Returns null while data is loading or if the ref is not a custom ref.
+ */
+export function useCustomRefLabel(ref: string | null): string | null {
+  const sefer = useCustomRefSefer(ref)
+  const parsed = ref ? parseCustomRef(ref) : null
+
+  // Only fetch sections for nested sefarim — skip the query for flat ones
+  const { data: sections = [] } = useCustomSections(
+    sefer?.structure_type === 'nested' ? (parsed?.seferId ?? '') : '',
+  )
+
+  return useMemo(() => {
+    if (!sefer || !parsed) return null
+    if (sefer.structure_type === 'flat') {
+      const n = parseInt(parsed.key, 10)
+      return isNaN(n) ? sefer.title_en : `${sefer.title_en} · ${sefer.section_label} ${n}`
+    }
+    // Nested: look up the section title by id
+    const section = sections.find((s) => s.id === parsed.key)
+    return section ? `${sefer.title_en} · ${section.title}` : sefer.title_en
+  }, [sefer, parsed, sections])
 }
 
 export function useDeleteCustomSection(seferId: string) {

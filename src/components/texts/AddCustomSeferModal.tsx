@@ -170,10 +170,10 @@ export function AddCustomSeferModal({ editing, onClose }: Props) {
               />
             </div>
 
-            {/* Sefaria ref */}
+            {/* Sefaria title (optional link) */}
             <div>
               <label className="mb-1 block text-xs font-medium text-kula-500 dark:text-kula-400">
-                Sefaria ref — optional
+                Link to Sefaria — optional
               </label>
               <input
                 type="text"
@@ -183,7 +183,7 @@ export function AddCustomSeferModal({ editing, onClose }: Props) {
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-sm text-kula-900 placeholder:text-kula-400 focus:outline-none focus:ring-2 focus:ring-kula-500 dark:text-kula-100"
               />
               <p className="mt-1 text-xs text-kula-400 dark:text-kula-600">
-                Paste the title as it appears on sefaria.org to link each section.
+                If this sefer exists on Sefaria, enter its exact title there (e.g. "Mesilat Yesharim") to add a Sefaria link. Leave blank if it doesn't exist on Sefaria.
               </p>
             </div>
 
